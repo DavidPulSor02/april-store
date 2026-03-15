@@ -71,3 +71,6 @@ const Api = {
   crearPago:         (d) => Api.post('/pagos', d),
   liquidarPago:      (id,d)=>Api.patch(`/pagos/${id}/liquidar`, d),
 };
+
+// Helper global para otros scripts
+const getToken = () => Api._token();

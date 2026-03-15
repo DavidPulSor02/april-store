@@ -250,10 +250,10 @@ async function confirmarVentaPOS() {
     
     // Enviar a la API
     const res = await Api.crearVenta(ventaData);
-    if (res.ok || res.folio) {
-      POS.ventaId = res.data?._id || null;
-      POS.folio = res.folio || POS.folio;
-    }
+    
+    // Si llegamos aquí sin error, la venta es real
+    POS.ventaId = res.data?._id || null;
+    POS.folio = res.folio || `VTA-${String(Date.now()).slice(-6)}`;
     
     toast('Venta realizada con éxito', 'success');
     
@@ -262,8 +262,6 @@ async function confirmarVentaPOS() {
     if (emailCliente) document.getElementById('email-destino').value = emailCliente;
     
     if (window.renderTicketPreview) {
-      // Adaptar el cart para que ticket.js lo lea correctamente
-      // POS.cart ya tiene { ...prod, qty }
       const ticketCart = POS.cart.map(i => ({ producto: i, qty: i.qty }));
       renderTicketPreview(ticketCart, sub, desc, total, POS.metodo, POS.folio);
     }
@@ -277,21 +275,11 @@ async function confirmarVentaPOS() {
     });
     renderGridPOS(POS.productos);
     
-    // Vaciar carrito DESPUES de renderizar el ticket si es necesario, 
-    // pero aquí ya generamos el ticketCart arriba
     clearCartPOS();
     
   } catch (e) {
     console.error('Error al procesar venta:', e);
-    toast('Venta registrada (Modo Demo)', 'success');
-    
-    document.getElementById('exito-folio').textContent = `Folio: ${POS.folio}`;
-    if (window.renderTicketPreview) {
-      const ticketCart = POS.cart.map(i => ({ producto: i, qty: i.qty }));
-      renderTicketPreview(ticketCart, sub, desc, total, POS.metodo, POS.folio);
-    }
-    openModal('modal-exito-pos');
-    clearCartPOS();
+    toast(e.message || 'Error al procesar la venta en el servidor', 'error');
   } finally {
     if (btnFinalizar) {
       btnFinalizar.disabled = false;

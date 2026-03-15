@@ -196,25 +196,37 @@ async function enviarTicketEmail() {
   }
 
   try {
-    // Si tenemos el ID de venta real, usamos la API del backend
-    if (typeof POS !== 'undefined' && POS.ventaId && typeof getToken === 'function') {
-      await fetch(`/api/tickets/${POS.ventaId}/email`, {
-        method:  'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${getToken()}` 
-        },
-        body: JSON.stringify({ email }),
-      });
+    const ventaId = POS.ventaId;
+    if (!ventaId) {
+      toast('ID de venta no válido para envío', 'error');
+      return;
+    }
+
+    const t = typeof getToken === 'function' ? getToken() : (typeof Api !== 'undefined' ? Api._token() : null);
+    if (!t) {
+      toast('Sesión no válida', 'error');
+      return;
+    }
+
+    const res = await fetch(`/api/tickets/${ventaId}/email`, {
+      method:  'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${t}` 
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
       toast(`Ticket enviado a ${email}`, 'success');
     } else {
-      // Modo demo
-      await new Promise(r => setTimeout(r, 1000));
-      toast(`Ticket enviado a ${email} (Simulado)`, 'success');
+      throw new Error(data.message || 'Error del servidor al enviar correo');
     }
   } catch (err) {
     console.error('Email error:', err);
-    toast('Error al enviar el correo', 'error');
+    toast(err.message || 'Error al enviar el correo', 'error');
   } finally {
     if (btn) {
       btn.textContent = originalText;
