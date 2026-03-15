@@ -1,40 +1,25 @@
 {
   "version": 2,
-  "name": "april-store",
-  "builds": [
+  "rewrites": [
     {
-      "src": "backend/server.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
     },
     {
-      "src": "frontend/**/*",
-      "use": "@vercel/static"
+      "source": "/mobile",
+      "destination": "/frontend/mobile/index.html"
+    },
+    {
+      "source": "/mobile/(.*)",
+      "destination": "/frontend/mobile/index.html"
+    },
+    {
+      "source": "/(.*).(js|css|png|jpg|jpeg|svg|ico)",
+      "destination": "/frontend/$1.$2"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/server.js"
-    },
-    {
-      "src": "/mobile",
-      "dest": "frontend/mobile/index.html"
-    },
-    {
-      "src": "/mobile/(.*)",
-      "dest": "frontend/mobile/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/index.html",
-      "continue": true
-    },
-    {
-      "handle": "filesystem"
-    }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret"
-  }
+  ]
 }

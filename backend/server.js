@@ -50,13 +50,18 @@ mongoose
   .connect(MONGODB)
   .then(() => {
     console.log('✅  MongoDB conectado');
-    app.listen(PORT, () => {
-      console.log(`🚀  Servidor:  http://localhost:${PORT}`);
-      console.log(`📱  iPad POS:  http://localhost:${PORT}/mobile`);
-      console.log(`🔑  Admin:     admin@aprilstore.mx / admin123`);
-    });
   })
   .catch(err => {
     console.error('❌  Error al conectar MongoDB:', err.message);
-    process.exit(1);
   });
+
+// Solo iniciar el servidor si se ejecuta este archivo directamente (no en Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀  Servidor:  http://localhost:${PORT}`);
+    console.log(`📱  iPad POS:  http://localhost:${PORT}/mobile`);
+    console.log(`🔑  Admin:     admin@aprilstore.mx / admin123`);
+  });
+}
+
+module.exports = app;
