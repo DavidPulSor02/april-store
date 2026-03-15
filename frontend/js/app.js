@@ -150,13 +150,13 @@ const PAGE_TITLES = {
   dashboard: 'Dashboard', productos: 'Productos', categorias: 'Categorías',
   colaboradores: 'Colaboradoras', consignacion: 'Consignación',
   ventas: 'Ventas', contabilidad: 'Contabilidad', pagos: 'Pagos a colaboradoras',
-  reportes: 'Reportes & Análisis',
+  reportes: 'Reportes & Análisis', pos: 'Terminal POS',
 };
 const CTA_LABELS = {
   dashboard: 'Nueva venta', productos: 'Agregar producto', categorias: 'Nueva categoría',
   colaboradores: 'Nueva colaboradora', consignacion: 'Registrar entrada',
   ventas: 'Nueva venta', contabilidad: 'Nuevo movimiento', pagos: 'Registrar pago',
-  reportes: 'Exportar reporte',
+  reportes: 'Exportar reporte', pos: 'Escanear producto',
 };
 
 function navigate(page) {
@@ -181,6 +181,7 @@ function navigate(page) {
   if (page === 'pagos')         loadPagos();
   if (page === 'categorias')    loadCategorias();
   if (page === 'reportes')      loadReportes();
+  if (page === 'pos')           enterPOSIntegrated();
 }
 
 function openPrimaryModal() {
@@ -192,6 +193,7 @@ function openPrimaryModal() {
   else if (active === 'pagos')         openPagoModal();
   else if (active === 'categorias')    openCategoriaModal();
   else if (active === 'reportes')      exportarCSV('rep-ventas-csv');
+  else if (active === 'pos')           openScanner();
   else openVentaModal();
 }
 

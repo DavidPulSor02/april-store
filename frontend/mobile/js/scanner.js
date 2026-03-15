@@ -26,13 +26,14 @@ function loadJsQR() {
 
 // ── Abrir escáner ─────────────────────────────────────────
 async function openScanner() {
-  document.getElementById('scanner-modal').classList.remove('hidden');
+  document.getElementById('modal-scanner').classList.remove('hidden');
   document.getElementById('scanner-result').classList.add('hidden');
+  document.getElementById('modal-overlay').classList.add('open');
 
   try {
     await loadJsQR();
   } catch {
-    iToast('jsQR no disponible — usa el SKU manual', 'error');
+    toast('jsQR no disponible — usa el SKU manual', 'error');
   }
 
   try {
@@ -41,7 +42,6 @@ async function openScanner() {
         facingMode:  { ideal: 'environment' },
         width:       { ideal: 1280 },
         height:      { ideal: 720 },
-        focusMode:   'continuous',
       }
     });
 
@@ -53,14 +53,8 @@ async function openScanner() {
     requestAnimationFrame(scanFrame);
   } catch (err) {
     console.warn('Camera error:', err.name);
-    if (err.name === 'NotAllowedError') {
-      iToast('Permiso de cámara denegado — usa el SKU manual', 'error');
-    } else if (err.name === 'NotFoundError') {
-      iToast('Cámara no encontrada — usa el SKU manual', 'error');
-    }
-    // Show manual input only mode
+    toast('Error de cámara — usa el SKU manual', 'warning');
     document.getElementById('scanner-video').style.display = 'none';
-    document.querySelector('.scanner-frame').style.display = 'none';
   }
 }
 
@@ -90,7 +84,6 @@ function scanFrame() {
 
     if (code && code.data) {
       const now = Date.now();
-      // Debounce — no disparar el mismo código dos veces en 2s
       if (Scanner.lastScan !== code.data || now - (Scanner.lastScanTime || 0) > 2000) {
         Scanner.lastScan     = code.data;
         Scanner.lastScanTime = now;
@@ -104,13 +97,9 @@ function scanFrame() {
 
 // ── Código detectado ──────────────────────────────────────
 function onCodeDetected(raw) {
-  // Vibrar en iPad si está disponible
   if ('vibrate' in navigator) navigator.vibrate(60);
-
-  // El raw puede ser el SKU directamente o una URL con el SKU
   let sku = raw.trim();
   if (sku.includes('/')) sku = sku.split('/').pop();
-
   searchBySKU(sku);
 }
 
@@ -119,7 +108,10 @@ function searchBySKU(sku) {
   if (!sku?.trim()) return;
   sku = sku.trim().toUpperCase();
 
-  const prod = PRODUCTOS.find(p =>
+  // Usar PRODUCTOS si está definido (pos.js) o POS.productos (pos_integrated.js)
+  const productosList = (typeof POS !== 'undefined' && POS.productos) ? POS.productos : (typeof PRODUCTOS !== 'undefined' ? PRODUCTOS : []);
+  
+  const prod = productosList.find(p =>
     p.sku?.toUpperCase() === sku ||
     p._id === sku ||
     p.nombre.toUpperCase().includes(sku)
@@ -129,25 +121,31 @@ function searchBySKU(sku) {
 
   if (prod) {
     Scanner.found = prod;
-    document.getElementById('result-name').textContent = prod.nombre;
-    document.getElementById('result-meta').textContent = `${fmt(prod.precio_venta)} · Stock: ${prod.stock_actual} uds · ${prod.categoria}`;
+    document.getElementById('res-name').textContent = prod.nombre;
+    document.getElementById('res-price').textContent = fmt(prod.precio_venta);
     resultEl.classList.remove('hidden');
 
-    // Overlay de éxito en el viewport
     const overlay = document.getElementById('scanner-overlay');
-    overlay.innerHTML = `<div style="background:rgba(74,140,106,.85);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500">${prod.nombre} — ${fmt(prod.precio_venta)}</div>`;
-    setTimeout(() => { overlay.innerHTML = ''; }, 2000);
+    if (overlay) {
+      overlay.innerHTML = `<div style="background:rgba(74,140,106,.85);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500">${prod.nombre} — ${fmt(prod.precio_venta)}</div>`;
+      setTimeout(() => { overlay.innerHTML = ''; }, 2000);
+    }
   } else {
     Scanner.found = null;
     resultEl.classList.add('hidden');
-    iToast(`Producto no encontrado: ${sku}`, 'error');
+    toast(`Producto no encontrado: ${sku}`, 'error');
   }
 }
 
 // ── Agregar escaneado al carrito ──────────────────────────
 function addScannedProduct() {
   if (!Scanner.found) return;
-  addToCart(Scanner.found._id);
+  // Usar addToCartPOS si existe, si no addToCart
+  if (typeof addToCartPOS === 'function') {
+    addToCartPOS(Scanner.found._id);
+  } else if (typeof addToCart === 'function') {
+    addToCart(Scanner.found._id);
+  }
   Scanner.found = null;
   document.getElementById('scanner-result').classList.add('hidden');
   closeScanner();
@@ -164,13 +162,19 @@ function closeScanner() {
   }
 
   const video = document.getElementById('scanner-video');
-  video.srcObject = null;
-  video.style.display = '';
+  if (video) {
+    video.srcObject = null;
+    video.style.display = '';
+  }
 
-  document.querySelector('.scanner-frame').style.display = '';
   document.getElementById('scanner-result').classList.add('hidden');
-  document.getElementById('scanner-modal').classList.add('hidden');
-  document.getElementById('manual-sku').value = '';
+  document.getElementById('modal-scanner').classList.add('hidden');
+  if (document.getElementById('manual-sku')) document.getElementById('manual-sku').value = '';
+  
+  // No cerrar el overlay si hay otros modales abiertos, pero aquí asumimos que escáner es el principal
+  if (!document.querySelector('.modal.open')) {
+     document.getElementById('modal-overlay').classList.remove('open');
+  }
 }
 
 // ── Auto-cerrar si se escaneó un producto ─────────────────
