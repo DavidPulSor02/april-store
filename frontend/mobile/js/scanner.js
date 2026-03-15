@@ -26,17 +26,32 @@ function loadJsQR() {
 
 // ── Abrir escáner ─────────────────────────────────────────
 async function openScanner() {
-  document.getElementById('modal-scanner').classList.remove('hidden');
-  document.getElementById('scanner-result').classList.add('hidden');
-  document.getElementById('modal-overlay').classList.add('open');
-
-  try {
-    await loadJsQR();
-  } catch {
-    toast('jsQR no disponible — usa el SKU manual', 'error');
+  const resultEl = document.getElementById('scanner-result');
+  if (resultEl) resultEl.classList.add('hidden');
+  
+  // Usar el sistema de modales del dashboard
+  if (typeof openModal === 'function') {
+    openModal('modal-scanner');
+  } else {
+    document.getElementById('modal-scanner').classList.remove('hidden');
+    document.getElementById('modal-overlay').classList.add('open');
   }
 
   try {
+    await loadJsQR();
+  } catch (e) {
+    console.error('jsQR load error:', e);
+    toast('Error cargando lector de códigos', 'error');
+  }
+
+  try {
+    const video = document.getElementById('scanner-video');
+    if (!video) return;
+
+    // Asegurar atributos para iOS/Safari
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('muted', 'true');
+
     Scanner.stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode:  { ideal: 'environment' },
@@ -45,51 +60,82 @@ async function openScanner() {
       }
     });
 
-    const video = document.getElementById('scanner-video');
     video.srcObject = Scanner.stream;
-    await video.play();
+    
+    // Esperar a que el video esté listo para reproducir
+    video.onloadedmetadata = async () => {
+      try {
+        await video.play();
+        Scanner.active = true;
+        Scanner.lastTimestamp = 0;
+        requestAnimationFrame(scanFrame);
+      } catch (e) {
+        console.error('Video play error:', e);
+        toast('Error al iniciar cámara', 'error');
+      }
+    };
 
-    Scanner.active = true;
-    requestAnimationFrame(scanFrame);
   } catch (err) {
     console.warn('Camera error:', err.name);
-    toast('Error de cámara — usa el SKU manual', 'warning');
-    document.getElementById('scanner-video').style.display = 'none';
+    toast('No se pudo acceder a la cámara', 'warning');
+    const v = document.getElementById('scanner-video');
+    if (v) v.style.display = 'none';
   }
 }
 
 // ── Frame loop para detección ─────────────────────────────
-function scanFrame() {
+function scanFrame(timestamp) {
   if (!Scanner.active) return;
+
+  // Throttle: solo escanear cada 200ms para no congelar dispositivos lentos
+  if (timestamp - (Scanner.lastTimestamp || 0) < 200) {
+    Scanner.animFrame = requestAnimationFrame(scanFrame);
+    return;
+  }
+  Scanner.lastTimestamp = timestamp;
 
   const video  = document.getElementById('scanner-video');
   const canvas = document.getElementById('scanner-canvas');
 
-  if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+  if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
     Scanner.animFrame = requestAnimationFrame(scanFrame);
     return;
   }
 
-  canvas.width  = video.videoWidth;
-  canvas.height = video.videoHeight;
+  // Usar dimensiones reales del video pero quizás escaladas si es muy grande
+  // Para jsQR, 640x480 suele ser suficiente y mucho más rápido
+  const displayWidth = 640;
+  const displayHeight = (video.videoHeight / video.videoWidth) * displayWidth;
+  
+  canvas.width  = displayWidth;
+  canvas.height = displayHeight;
+  
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) {
+    Scanner.animFrame = requestAnimationFrame(scanFrame);
+    return;
+  }
+  
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  try {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    if (window.jsQR) {
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert',
+      });
 
-  if (window.jsQR) {
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'dontInvert',
-    });
-
-    if (code && code.data) {
-      const now = Date.now();
-      if (Scanner.lastScan !== code.data || now - (Scanner.lastScanTime || 0) > 2000) {
-        Scanner.lastScan     = code.data;
-        Scanner.lastScanTime = now;
-        onCodeDetected(code.data);
+      if (code && code.data) {
+        const now = Date.now();
+        if (Scanner.lastScan !== code.data || now - (Scanner.lastScanTime || 0) > 2000) {
+          Scanner.lastScan     = code.data;
+          Scanner.lastScanTime = now;
+          onCodeDetected(code.data);
+        }
       }
     }
+  } catch (e) {
+    console.error('Scan processing error:', e);
   }
 
   Scanner.animFrame = requestAnimationFrame(scanFrame);
@@ -108,8 +154,7 @@ function searchBySKU(sku) {
   if (!sku?.trim()) return;
   sku = sku.trim().toUpperCase();
 
-  // Usar PRODUCTOS si está definido (pos.js) o POS.productos (pos_integrated.js)
-  const productosList = (typeof POS !== 'undefined' && POS.productos) ? POS.productos : (typeof PRODUCTOS !== 'undefined' ? PRODUCTOS : []);
+  const productosList = (typeof POS !== 'undefined' && POS.productos) ? POS.productos : (typeof State !== 'undefined' && State.cacheProductos ? State.cacheProductos : []);
   
   const prod = productosList.find(p =>
     p.sku?.toUpperCase() === sku ||
@@ -121,18 +166,20 @@ function searchBySKU(sku) {
 
   if (prod) {
     Scanner.found = prod;
-    document.getElementById('res-name').textContent = prod.nombre;
-    document.getElementById('res-price').textContent = fmt(prod.precio_venta);
-    resultEl.classList.remove('hidden');
+    const nameEl = document.getElementById('res-name');
+    const priceEl = document.getElementById('res-price');
+    if (nameEl) nameEl.textContent = prod.nombre;
+    if (priceEl) priceEl.textContent = fmt(prod.precio_venta);
+    if (resultEl) resultEl.classList.remove('hidden');
 
     const overlay = document.getElementById('scanner-overlay');
     if (overlay) {
       overlay.innerHTML = `<div style="background:rgba(74,140,106,.85);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500">${prod.nombre} — ${fmt(prod.precio_venta)}</div>`;
-      setTimeout(() => { overlay.innerHTML = ''; }, 2000);
+      setTimeout(() => { if (overlay) overlay.innerHTML = ''; }, 2000);
     }
   } else {
     Scanner.found = null;
-    resultEl.classList.add('hidden');
+    if (resultEl) resultEl.classList.add('hidden');
     toast(`Producto no encontrado: ${sku}`, 'error');
   }
 }
@@ -140,14 +187,14 @@ function searchBySKU(sku) {
 // ── Agregar escaneado al carrito ──────────────────────────
 function addScannedProduct() {
   if (!Scanner.found) return;
-  // Usar addToCartPOS si existe, si no addToCart
   if (typeof addToCartPOS === 'function') {
     addToCartPOS(Scanner.found._id);
-  } else if (typeof addToCart === 'function') {
-    addToCart(Scanner.found._id);
+  } else if (typeof addVentaItem === 'function') {
+    addVentaItem(Scanner.found._id);
   }
   Scanner.found = null;
-  document.getElementById('scanner-result').classList.add('hidden');
+  const res = document.getElementById('scanner-result');
+  if (res) res.classList.add('hidden');
   closeScanner();
 }
 
@@ -164,17 +211,20 @@ function closeScanner() {
   const video = document.getElementById('scanner-video');
   if (video) {
     video.srcObject = null;
-    video.style.display = '';
   }
 
-  document.getElementById('scanner-result').classList.add('hidden');
-  document.getElementById('modal-scanner').classList.add('hidden');
-  if (document.getElementById('manual-sku')) document.getElementById('manual-sku').value = '';
+  const res = document.getElementById('scanner-result');
+  if (res) res.classList.add('hidden');
   
-  // No cerrar el overlay si hay otros modales abiertos, pero aquí asumimos que escáner es el principal
-  if (!document.querySelector('.modal.open')) {
-     document.getElementById('modal-overlay').classList.remove('open');
+  if (typeof closeAllModals === 'function') {
+    closeAllModals();
+  } else {
+    document.getElementById('modal-scanner').classList.add('hidden');
+    document.getElementById('modal-overlay').classList.remove('open');
   }
+  
+  const manual = document.getElementById('manual-sku');
+  if (manual) manual.value = '';
 }
 
 // ── Auto-cerrar si se escaneó un producto ─────────────────
