@@ -83,7 +83,7 @@ async function tryAutoLogin() {
     if (r.ok) { const d = await r.json(); POS.usuario = d.usuario; enterApp(); return; }
   } catch {}
   // Demo fallback
-  POS.usuario = { nombre:'April Hernández', rol:'admin' };
+  POS.usuario = { nombre:'Abril Vega', rol:'admin' };
   enterApp();
 }
 
@@ -104,7 +104,7 @@ async function handleIPadLogin() {
     localStorage.setItem('april_token', d.token);
     enterApp();
   } catch(e) {
-    if (pwd.length >= 3) { POS.usuario = { nombre:'April Hernández', rol:'admin' }; enterApp(); }
+    if (pwd.length >= 3) { POS.usuario = { nombre:'Abril Vega', rol:'admin' }; enterApp(); }
     else showLoginErr(e.message || 'Credenciales incorrectas');
   }
   btn.textContent = 'Ingresar'; btn.disabled = false;

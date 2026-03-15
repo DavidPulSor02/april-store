@@ -12,7 +12,7 @@ const State = {
 
 // ── Mock data (para demo sin backend) ────────────────────
 const MOCK = {
-  usuario: { id: '1', nombre: 'April Hernández', rol: 'admin' },
+  usuario: { id: '1', nombre: 'Abril Vega', rol: 'admin' },
   dashboard: {
     ventas_mes: { total: 48320, count: 312 },
     ventas_hoy: { total: 6240,  count: 87  },
@@ -57,12 +57,12 @@ const MOCK = {
     { _id: 'p8', nombre: 'Blusa Bordada Floral',   sku: 'BLU-008', precio_venta: 580, precio_costo: 200, stock_actual: 4,  stock_minimo: 5,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'Carmen V.' }, categoria_id: { nombre: 'Ropa'     } },
   ],
   ventas: [
-    { _id: 'v1', folio: 'VTA-000892', fecha: new Date('2026-03-15T14:30:00'), total: 380,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'April H.' } },
-    { _id: 'v2', folio: 'VTA-000891', fecha: new Date('2026-03-15T12:10:00'), total: 120,  metodo_pago: 'transferencia', estatus: 'completada', usuario_id: { nombre: 'April H.' } },
-    { _id: 'v3', folio: 'VTA-000890', fecha: new Date('2026-03-14T17:45:00'), total: 450,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'April H.' } },
-    { _id: 'v4', folio: 'VTA-000889', fecha: new Date('2026-03-14T11:20:00'), total: 840,  metodo_pago: 'tarjeta',       estatus: 'completada', usuario_id: { nombre: 'April H.' } },
-    { _id: 'v5', folio: 'VTA-000888', fecha: new Date('2026-03-13T16:00:00'), total: 475,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'April H.' } },
-    { _id: 'v6', folio: 'VTA-000887', fecha: new Date('2026-03-13T10:30:00'), total: 1260, metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'April H.' } },
+    { _id: 'v1', folio: 'VTA-000892', fecha: new Date('2026-03-15T14:30:00'), total: 380,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
+    { _id: 'v2', folio: 'VTA-000891', fecha: new Date('2026-03-15T12:10:00'), total: 120,  metodo_pago: 'transferencia', estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
+    { _id: 'v3', folio: 'VTA-000890', fecha: new Date('2026-03-14T17:45:00'), total: 450,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
+    { _id: 'v4', folio: 'VTA-000889', fecha: new Date('2026-03-14T11:20:00'), total: 840,  metodo_pago: 'tarjeta',       estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
+    { _id: 'v5', folio: 'VTA-000888', fecha: new Date('2026-03-13T16:00:00'), total: 475,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
+    { _id: 'v6', folio: 'VTA-000887', fecha: new Date('2026-03-13T10:30:00'), total: 1260, metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
   ],
   contabilidad: [
     { _id: 'm1', fecha: new Date('2026-03-15'), concepto: 'Venta VTA-000892', tipo: 'ingreso', categoria_contable: 'venta',             monto: 380,  saldo_resultante: 48320 },
