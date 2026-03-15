@@ -14,8 +14,9 @@
       "destination": "/frontend/mobile/index.html"
     },
     {
-      "source": "/(.*).(js|css|png|jpg|jpeg|svg|ico)",
-      "destination": "/frontend/$1.$2"
+      "source": "/(.*)",
+      "destination": "/frontend/$1",
+      "continue": true
     },
     {
       "source": "/(.*)",
