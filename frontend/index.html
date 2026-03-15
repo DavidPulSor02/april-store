@@ -343,11 +343,12 @@
               <h3 class="pos-cart-title">Venta actual</h3>
               <button class="btn-clear-cart" onclick="clearCartPOS()">Vaciar</button>
             </div>
-            <div class="pos-cart-items" id="pos-cart-items">
-              <div class="pos-cart-empty" id="pos-cart-empty">
+            <div class="pos-cart-items">
+              <div class="pos-cart-empty" id="pos-empty-cart-msg">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
                 <p>Carrito vacío</p>
               </div>
+              <div id="pos-items-list"></div>
             </div>
             <div class="pos-cart-summary">
               <div class="pos-sum-line"><span>Subtotal</span><span id="pos-sum-subtotal">$0.00</span></div>
@@ -361,9 +362,9 @@
                 <button class="pay-method-btn" data-method="tarjeta" onclick="selectPayMethod(this)">Tarjeta</button>
                 <button class="pay-method-btn" data-method="transferencia" onclick="selectPayMethod(this)">Transf.</button>
               </div>
-              <button class="btn-cobrar-pos" id="btn-cobrar-pos" disabled onclick="iniciarCobroPOS()">
+              <button class="btn-cobrar-pos" id="pos-cobrar-btn" disabled onclick="iniciarCobroPOS()">
                 <span>Cobrar</span>
-                <span id="pos-btn-total">$0.00</span>
+                <span id="pos-btn-total-val">$0.00</span>
               </button>
             </div>
           </div>
@@ -853,7 +854,37 @@
   </div>
   <div class="modal-footer">
     <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
-    <button class="btn-primary" onclick="confirmarVentaPOS()">Finalizar venta</button>
+    <button class="btn-primary" id="btn-finalizar-venta-pos" onclick="confirmarVentaPOS()">Finalizar venta</button>
+  </div>
+</div>
+
+<!-- Modal: Éxito Venta POS -->
+<div id="modal-exito-pos" class="modal modal-sm">
+  <div class="modal-header">
+    <div style="text-align:center; width:100%">
+      <div style="width:48px;height:48px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="modal-title">¡Venta exitosa!</div>
+      <div class="modal-sub" id="exito-folio">Folio: VTA-000000</div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div id="ticket-preview" style="background:#fff; border:1px solid var(--rose-mist); border-radius:var(--radius-md); margin-bottom:16px;"></div>
+    <div class="form-field">
+      <label>Enviar ticket por correo</label>
+      <div class="input-action-wrap">
+        <input type="email" id="email-destino" placeholder="correo@ejemplo.com"/>
+        <button class="btn-primary" onclick="enviarTicketEmail()">Enviar</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer" style="flex-direction:column; gap:8px">
+    <button class="btn-primary full-span" onclick="imprimirTicket()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir Ticket
+    </button>
+    <button class="btn-ghost full-span" onclick="closeAllModals()">Cerrar y nueva venta</button>
   </div>
 </div>
 

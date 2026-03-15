@@ -4,24 +4,33 @@
 
 // ── Renderizar ticket preview (mini) ─────────────────────
 function renderTicketPreview(cart, sub, desc, total, metodo, folio) {
-  const rows = cart.map(i => `
+  // cart es array de { producto, qty } o { ...producto, qty }
+  const rows = cart.map(i => {
+    const prod = i.producto || i;
+    return `
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F5E8EB;font-size:12px">
-      <span style="color:#1C1318;flex:1">${i.producto.nombre} <span style="color:#9C8490">×${i.qty}</span></span>
-      <span style="font-weight:500;color:#A84D62;white-space:nowrap;margin-left:12px">${fmt(i.producto.precio_venta * i.qty)}</span>
-    </div>`).join('');
+      <span style="color:#1C1318;flex:1">${prod.nombre} <span style="color:#9C8490">×${i.qty}</span></span>
+      <span style="font-weight:500;color:#A84D62;white-space:nowrap;margin-left:12px">${fmt(prod.precio_venta * i.qty)}</span>
+    </div>`;
+  }).join('');
 
   const discountRow = desc > 0 ? `
     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#4A8C6A">
       <span>Descuento</span><span>−${fmt(desc)}</span>
     </div>` : '';
 
-  document.getElementById('ticket-preview').innerHTML = `
+  const ticketEl = document.getElementById('ticket-preview');
+  if (!ticketEl) return;
+
+  ticketEl.innerHTML = `
     <div style="padding:14px 16px;font-family:'DM Sans',sans-serif">
       <div style="text-align:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #F5E8EB">
         <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:#A84D62">April Store</div>
         <div style="font-size:11px;color:#9C8490;margin-top:2px">${folio} · ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</div>
       </div>
-      ${rows}
+      <div style="max-height: 200px; overflow-y: auto;">
+        ${rows}
+      </div>
       ${discountRow}
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #EFC5CD;margin-top:6px">
         <span style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500">Total</span>
@@ -33,24 +42,38 @@ function renderTicketPreview(cart, sub, desc, total, metodo, folio) {
 
 // ── Imprimir ticket completo ──────────────────────────────
 function imprimirTicket() {
-  const cart    = POS.cart;
-  const {sub, desc, total} = recalcTotals();
-  const folio   = POS.folio;
-  const metodo  = POS.metodo;
+  if (typeof POS === 'undefined' || !POS.cart.length) {
+    toast('No hay venta activa para imprimir', 'error');
+    return;
+  }
+
+  const cart = POS.cart;
+  let sub = cart.reduce((a, i) => a + (i.precio_venta * i.qty), 0);
+  let desc = parseFloat(document.getElementById('pos-sum-descuento')?.value || 0);
+  let total = Math.max(0, sub - desc);
+  
+  const folio   = POS.folio || 'VTA-PROV';
+  const metodo  = POS.metodo || 'efectivo';
   const fecha   = new Date();
 
-  const rows = cart.map(i => `
+  const rows = cart.map(i => {
+    const prod = i.producto || i;
+    return `
     <tr>
-      <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;color:#1C1318">${i.producto.nombre}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;color:#1C1318">${prod.nombre}</td>
       <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;color:#9C8490;text-align:center">${i.qty}</td>
-      <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;color:#9C8490;text-align:right">${fmt(i.producto.precio_venta)}</td>
-      <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;font-weight:500;text-align:right">${fmt(i.producto.precio_venta * i.qty)}</td>
-    </tr>`).join('');
+      <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;color:#9C8490;text-align:right">${fmt(prod.precio_venta)}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #F5E8EB;font-size:14px;font-weight:500;text-align:right">${fmt(prod.precio_venta * i.qty)}</td>
+    </tr>`;
+  }).join('');
 
   const html = buildFullTicketHTML({ folio, fecha, metodo, sub, desc, total, rows });
 
   const win = window.open('', '_blank', 'width=420,height=700');
-  if (!win) { iToast('Activa las ventanas emergentes para imprimir', 'error'); return; }
+  if (!win) {
+    toast('Activa las ventanas emergentes para imprimir', 'error'); 
+    return;
+  }
 
   win.document.write(html);
   win.document.close();
@@ -61,7 +84,7 @@ function imprimirTicket() {
     }, 300);
   };
 
-  iToast('Abriendo diálogo de impresión…');
+  toast('Abriendo diálogo de impresión…');
 }
 
 // ── Construir HTML del ticket completo ────────────────────
@@ -156,50 +179,46 @@ function buildFullTicketHTML({ folio, fecha, metodo, sub, desc, total, rows }) {
 </html>`;
 }
 
-// ── Email modal ───────────────────────────────────────────
-function openEmailModal() {
-  document.getElementById('email-folio-ref').textContent = POS.folio;
-  document.getElementById('email-nombre').value   = '';
-  document.getElementById('email-destino').value  = '';
-  document.getElementById('email-modal').classList.remove('hidden');
-}
-
-function closeEmailModal() {
-  document.getElementById('email-modal').classList.add('hidden');
-}
-
 async function enviarTicketEmail() {
-  const email  = document.getElementById('email-destino').value.trim();
-  const nombre = document.getElementById('email-nombre').value.trim();
+  const emailInput = document.getElementById('email-destino');
+  const email = emailInput?.value.trim();
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    iToast('Ingresa un correo electrónico válido', 'error');
+    toast('Ingresa un correo electrónico válido', 'error');
     return;
   }
 
-  const btn = document.querySelector('#email-modal .cobro-confirm');
-  btn.textContent = 'Enviando…';
-  btn.disabled    = true;
+  const btn = document.querySelector('#modal-exito-pos button[onclick="enviarTicketEmail()"]');
+  const originalText = btn?.textContent || 'Enviar';
+  if (btn) {
+    btn.textContent = 'Enviando…';
+    btn.disabled    = true;
+  }
 
   try {
     // Si tenemos el ID de venta real, usamos la API del backend
-    if (POS.ventaId) {
+    if (typeof POS !== 'undefined' && POS.ventaId && typeof getToken === 'function') {
       await fetch(`/api/tickets/${POS.ventaId}/email`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
-        body:    JSON.stringify({ email, nombre }),
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${getToken()}` 
+        },
+        body: JSON.stringify({ email }),
       });
+      toast(`Ticket enviado a ${email}`, 'success');
     } else {
-      // Modo demo — simular envío
-      await new Promise(r => setTimeout(r, 1200));
+      // Modo demo
+      await new Promise(r => setTimeout(r, 1000));
+      toast(`Ticket enviado a ${email} (Simulado)`, 'success');
     }
-
-    closeEmailModal();
-    iToast(`Ticket enviado a ${email}`, 'success');
   } catch (err) {
-    iToast('Error al enviar el correo', 'error');
+    console.error('Email error:', err);
+    toast('Error al enviar el correo', 'error');
+  } finally {
+    if (btn) {
+      btn.textContent = originalText;
+      btn.disabled  = false;
+    }
   }
-
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar ticket';
-  btn.disabled  = false;
 }

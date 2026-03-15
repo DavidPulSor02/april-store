@@ -133,13 +133,14 @@ function changeQtyPOS(id, delta) {
 }
 
 function renderCartPOS() {
-  const wrap = document.getElementById('pos-cart-items');
-  const empty = document.getElementById('pos-cart-empty');
-  const btn = document.getElementById('btn-cobrar-pos');
+  const wrap = document.getElementById('pos-items-list');
+  const empty = document.getElementById('pos-empty-cart-msg');
+  const btn = document.getElementById('pos-cobrar-btn');
   
+  if (!wrap || !empty || !btn) return;
+
   if (!POS.cart.length) {
     wrap.innerHTML = '';
-    wrap.appendChild(empty);
     empty.classList.remove('hidden');
     btn.disabled = true;
   } else {
@@ -164,12 +165,16 @@ function renderCartPOS() {
 
 function recalcTotalsPOS() {
   const sub = POS.cart.reduce((a, i) => a + (i.precio_venta * i.qty), 0);
-  const desc = parseFloat(document.getElementById('pos-sum-descuento').value || 0);
+  const desc = parseFloat(document.getElementById('pos-sum-descuento')?.value || 0);
   const total = Math.max(0, sub - desc);
   
-  document.getElementById('pos-sum-subtotal').textContent = fmt(sub);
-  document.getElementById('pos-sum-total').textContent = fmt(total);
-  document.getElementById('pos-btn-total').textContent = fmt(total);
+  const subEl = document.getElementById('pos-sum-subtotal');
+  const totalEl = document.getElementById('pos-sum-total');
+  const btnTotalEl = document.getElementById('pos-btn-total-val');
+
+  if (subEl) subEl.textContent = fmt(sub);
+  if (totalEl) totalEl.textContent = fmt(total);
+  if (btnTotalEl) btnTotalEl.textContent = fmt(total);
 }
 
 function clearCartPOS() {
@@ -200,8 +205,7 @@ function iniciarCobroPOS() {
     efFields.classList.add('hidden');
   }
   
-  document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('modal-cobro-pos').classList.add('open');
+  openModal('modal-cobro-pos');
 }
 
 function calcCambioPOS() {
@@ -217,7 +221,7 @@ async function confirmarVentaPOS() {
   const sub = POS.cart.reduce((a, i) => a + (i.precio_venta * i.qty), 0);
   const desc = parseFloat(document.getElementById('pos-sum-descuento').value || 0);
   const total = sub - desc;
-  const email = document.getElementById('pos-cliente-email').value.trim();
+  const emailCliente = document.getElementById('pos-cliente-email').value.trim();
   
   if (POS.metodo === 'efectivo') {
     const recibido = parseFloat(document.getElementById('pos-recibido').value || 0);
@@ -225,6 +229,12 @@ async function confirmarVentaPOS() {
       toast('Monto recibido insuficiente', 'error');
       return;
     }
+  }
+
+  const btnFinalizar = document.getElementById('btn-finalizar-venta-pos');
+  if (btnFinalizar) {
+    btnFinalizar.disabled = true;
+    btnFinalizar.textContent = 'Procesando...';
   }
 
   POS.folio = `VTA-${String(Date.now()).slice(-6)}`;
@@ -235,7 +245,7 @@ async function confirmarVentaPOS() {
       items: POS.cart.map(i => ({ producto_id: i._id, cantidad: i.qty, porcentaje_comision: 70 })),
       metodo_pago: POS.metodo,
       descuento: desc,
-      email_comprobante: email
+      email_comprobante: emailCliente
     };
     
     // Enviar a la API
@@ -247,16 +257,18 @@ async function confirmarVentaPOS() {
     
     toast('Venta realizada con éxito', 'success');
     
-    // Generar ticket preview (si existe la función)
+    // Mostrar modal de éxito y ticket
+    document.getElementById('exito-folio').textContent = `Folio: ${POS.folio}`;
+    if (emailCliente) document.getElementById('email-destino').value = emailCliente;
+    
     if (window.renderTicketPreview) {
       // Adaptar el cart para que ticket.js lo lea correctamente
+      // POS.cart ya tiene { ...prod, qty }
       const ticketCart = POS.cart.map(i => ({ producto: i, qty: i.qty }));
-      // Suponiendo que hay un contenedor para el ticket, si no, crear uno o usar modal
-      // Por ahora solo mostrar toast éxito
+      renderTicketPreview(ticketCart, sub, desc, total, POS.metodo, POS.folio);
     }
 
-    closeAllModals();
-    clearCartPOS();
+    openModal('modal-exito-pos');
     
     // Actualizar stock localmente
     POS.cart.forEach(item => {
@@ -265,10 +277,25 @@ async function confirmarVentaPOS() {
     });
     renderGridPOS(POS.productos);
     
+    // Vaciar carrito DESPUES de renderizar el ticket si es necesario, 
+    // pero aquí ya generamos el ticketCart arriba
+    clearCartPOS();
+    
   } catch (e) {
     console.error('Error al procesar venta:', e);
-    toast('Venta registrada (Modo Offline/Demo)', 'success');
-    closeAllModals();
+    toast('Venta registrada (Modo Demo)', 'success');
+    
+    document.getElementById('exito-folio').textContent = `Folio: ${POS.folio}`;
+    if (window.renderTicketPreview) {
+      const ticketCart = POS.cart.map(i => ({ producto: i, qty: i.qty }));
+      renderTicketPreview(ticketCart, sub, desc, total, POS.metodo, POS.folio);
+    }
+    openModal('modal-exito-pos');
     clearCartPOS();
+  } finally {
+    if (btnFinalizar) {
+      btnFinalizar.disabled = false;
+      btnFinalizar.textContent = 'Finalizar venta';
+    }
   }
 }
