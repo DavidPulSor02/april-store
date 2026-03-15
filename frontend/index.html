@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>April Store — Sistema de Gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/app.css"/>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════ -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="var(--rose)"/><path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="white"/></svg>
+      <span class="login-brand">April Store</span>
+    </div>
+    <h1 class="login-title">Bienvenida de vuelta</h1>
+    <p class="login-sub">Ingresa tus credenciales para continuar</p>
+    <div class="form-field">
+      <label>Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="admin@aprilstore.mx" autocomplete="email"/>
+    </div>
+    <div class="form-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <button class="btn-primary full-width" onclick="handleLogin()">
+      <span>Iniciar sesión</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+    <p class="login-hint">Demo: admin@aprilstore.mx / admin123</p>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="var(--rose)"/><path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="white"/></svg>
+        <div>
+          <div class="brand-name">April Store</div>
+          <div class="brand-sub">Panel de gestión</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-label">Principal</div>
+        <button class="nav-item active" data-page="dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Catálogo</div>
+        <button class="nav-item" data-page="productos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
+          <span>Productos</span>
+        </button>
+        <button class="nav-item" data-page="categorias">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+          <span>Categorías</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Colaboradores</div>
+        <button class="nav-item" data-page="colaboradores">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85"/></svg>
+          <span>Colaboradores</span>
+        </button>
+        <button class="nav-item" data-page="consignacion">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h14M5 12h14M5 16h6"/><rect x="2" y="4" width="20" height="18" rx="2"/></svg>
+          <span>Consignación</span>
+        </button>
+        <button class="nav-item" data-page="pagos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          <span>Pagos</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Finanzas</div>
+        <button class="nav-item" data-page="ventas">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <span>Ventas</span>
+        </button>
+        <button class="nav-item" data-page="contabilidad">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg>
+          <span>Contabilidad</span>
+        </button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Análisis</div>
+        <button class="nav-item" data-page="reportes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Reportes</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-initials">AS</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Admin</div>
+          <div class="user-role" id="user-role">Administradora</div>
+        </div>
+        <button class="icon-btn" onclick="handleLogout()" title="Cerrar sesión">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="page-title">Dashboard</h1>
+        <div class="breadcrumb" id="breadcrumb">Inicio / Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" class="search-input" placeholder="Buscar…" id="global-search"/>
+        </div>
+        <div class="alert-badge" id="alert-bell" onclick="navigate('productos')" title="Alertas de stock">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="badge-dot" id="badge-dot"></span>
+        </div>
+        <button class="btn-primary" id="topbar-cta" onclick="openPrimaryModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span id="cta-label">Nueva venta</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGES -->
+    <div class="pages-wrap">
+
+      <!-- ── DASHBOARD ─────────────────────────────────── -->
+      <section id="page-dashboard" class="page active">
+        <div class="kpi-row" id="kpi-row"></div>
+        <div class="dash-grid">
+          <div class="panel" id="panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">Ventas — últimos 8 días</span>
+              <span class="panel-tag">Este mes</span>
+            </div>
+            <div class="bar-chart" id="bar-chart"></div>
+          </div>
+          <div class="panel" id="panel-colabs">
+            <div class="panel-header">
+              <span class="panel-title">Top colaboradoras</span>
+              <button class="link-btn" onclick="navigate('colaboradores')">Ver todas</button>
+            </div>
+            <div id="top-colabs-list"></div>
+          </div>
+        </div>
+        <div class="dash-grid-3">
+          <div class="panel col-2" id="panel-activity">
+            <div class="panel-header"><span class="panel-title">Actividad reciente</span></div>
+            <div id="activity-feed"></div>
+          </div>
+          <div class="panel" id="panel-alerts">
+            <div class="panel-header">
+              <span class="panel-title">Alertas de stock</span>
+              <button class="link-btn" onclick="navigate('productos')">Ver todas</button>
+            </div>
+            <div id="stock-alerts"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── PRODUCTOS ─────────────────────────────────── -->
+      <section id="page-productos" class="page">
+        <div class="table-toolbar">
+          <div class="filter-row">
+            <select class="select-sm" id="filter-tipo" onchange="loadProductos()">
+              <option value="">Todos</option>
+              <option value="propio">Propios</option>
+              <option value="consignacion">Consignación</option>
+            </select>
+            <select class="select-sm" id="filter-estatus-prod" onchange="loadProductos()">
+              <option value="">Cualquier estado</option>
+              <option value="activo">Activos</option>
+              <option value="agotado">Agotados</option>
+              <option value="inactivo">Inactivos</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <span class="count-label" id="prod-count">— productos</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Producto</th><th>Categoría</th><th>Colaboradora</th>
+                <th>Precio</th><th>Stock</th><th>Tipo</th><th>Estado</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-productos"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── COLABORADORES ──────────────────────────────── -->
+      <section id="page-colaboradores" class="page">
+        <div class="table-toolbar">
+          <div class="filter-row">
+            <select class="select-sm" id="filter-est-colab" onchange="loadColaboradores()">
+              <option value="activo">Activas</option>
+              <option value="">Todas</option>
+              <option value="inactivo">Inactivas</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <span class="count-label" id="colab-count">— colaboradoras</span>
+          </div>
+        </div>
+        <div class="colabs-grid" id="colabs-grid"></div>
+      </section>
+
+      <!-- ── VENTAS ─────────────────────────────────────── -->
+      <section id="page-ventas" class="page">
+        <div class="table-toolbar">
+          <div class="filter-row">
+            <input type="date" class="select-sm" id="filter-desde"/>
+            <input type="date" class="select-sm" id="filter-hasta"/>
+            <select class="select-sm" id="filter-metodo" onchange="loadVentas()">
+              <option value="">Todos los métodos</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="tarjeta">Tarjeta</option>
+            </select>
+            <button class="btn-sm-outline" onclick="loadVentas()">Filtrar</button>
+          </div>
+          <div class="toolbar-right">
+            <span class="count-label" id="ventas-count">— ventas</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Folio</th><th>Fecha</th><th>Artículos</th><th>Total</th><th>Método</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody id="tbody-ventas"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── CONTABILIDAD ───────────────────────────────── -->
+      <section id="page-contabilidad" class="page">
+        <div id="contab-kpis" class="kpi-row"></div>
+        <div class="table-toolbar">
+          <div class="filter-row">
+            <select class="select-sm" id="filter-tipo-ct" onchange="loadContabilidad()">
+              <option value="">Todos</option><option value="ingreso">Ingresos</option><option value="egreso">Egresos</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn-sm-outline" onclick="openMovimientoModal()">+ Movimiento</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Tipo</th><th>Monto</th></tr></thead>
+            <tbody id="tbody-contabilidad"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── CONSIGNACION ───────────────────────────────── -->
+      <section id="page-consignacion" class="page">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Producto</th><th>Colaboradora</th><th>Ingresado</th><th>Disponible</th><th>Vendido</th><th>Estado</th><th>Fecha entrada</th></tr></thead>
+            <tbody id="tbody-consig"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── PAGOS ──────────────────────────────────────── -->
+      <section id="page-pagos" class="page">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Colaboradora</th><th>Periodo</th><th>Monto</th><th>Método</th><th>Estado</th><th>Fecha pago</th><th></th></tr></thead>
+            <tbody id="tbody-pagos"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── CATEGORIAS ─────────────────────────────────── -->
+      <section id="page-categorias" class="page">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Categoría</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody-cats"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── REPORTES ───────────────────────────────────── -->
+      <section id="page-reportes" class="page">
+        <div class="empty-state" style="padding:60px">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <p>Cargando reportes…</p>
+        </div>
+      </section>
+
+    </div><!-- /pages-wrap -->
+  </main>
+</div><!-- /app -->
+
+<!-- ══ MODALS ═════════════════════════════════════════════ -->
+
+<!-- Overlay -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeAllModals()"></div>
+
+<!-- Modal: Nueva venta -->
+<div id="modal-venta" class="modal">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Registrar venta</div>
+      <div class="modal-sub">Selecciona los productos y método de pago</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="venta-layout">
+      <div class="venta-left">
+        <div class="form-field">
+          <label>Buscar producto</label>
+          <div class="input-icon-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="prod-search" placeholder="Nombre o SKU…" oninput="searchProductosVenta(this.value)"/>
+          </div>
+          <div class="prod-results" id="prod-results"></div>
+        </div>
+        <div class="venta-items" id="venta-items">
+          <div class="empty-items">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <span>Agrega productos</span>
+          </div>
+        </div>
+      </div>
+      <div class="venta-right">
+        <div class="venta-summary">
+          <div class="summary-row"><span>Subtotal</span><span id="v-subtotal">$0.00</span></div>
+          <div class="summary-row">
+            <span>Descuento</span>
+            <input type="number" id="v-descuento" value="0" min="0" class="discount-input" oninput="calcVentaTotals()"/>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row total-row"><span>Total</span><span id="v-total">$0.00</span></div>
+        </div>
+        <div class="form-field">
+          <label>Método de pago</label>
+          <div class="payment-methods">
+            <label class="pay-opt"><input type="radio" name="metodo_pago" value="efectivo" checked/><span>Efectivo</span></label>
+            <label class="pay-opt"><input type="radio" name="metodo_pago" value="transferencia"/><span>Transferencia</span></label>
+            <label class="pay-opt"><input type="radio" name="metodo_pago" value="tarjeta"/><span>Tarjeta</span></label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Notas (opcional)</label>
+          <textarea id="v-notas" rows="2" placeholder="Observaciones de la venta…"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitVenta()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Confirmar venta
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Producto -->
+<div id="modal-producto" class="modal modal-md">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title" id="modal-prod-title">Nuevo producto</div>
+      <div class="modal-sub">Completa la información del artículo</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="prod-id"/>
+    <div class="form-grid-2">
+      <div class="form-field">
+        <label>Nombre *</label>
+        <input type="text" id="prod-nombre" placeholder="Nombre del producto"/>
+      </div>
+      <div class="form-field">
+        <label>SKU</label>
+        <input type="text" id="prod-sku" placeholder="Código opcional"/>
+      </div>
+      <div class="form-field">
+        <label>Categoría *</label>
+        <select id="prod-categoria"></select>
+      </div>
+      <div class="form-field">
+        <label>Tipo</label>
+        <select id="prod-tipo">
+          <option value="consignacion">Consignación</option>
+          <option value="propio">Propio</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Colaboradora</label>
+        <select id="prod-colaborador">
+          <option value="">— Tienda propia —</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Precio de venta *</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">$</span>
+          <input type="number" id="prod-precio" placeholder="0.00" min="0" step="0.01"/>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Precio costo</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">$</span>
+          <input type="number" id="prod-costo" placeholder="0.00" min="0" step="0.01"/>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Stock inicial</label>
+        <input type="number" id="prod-stock" placeholder="0" min="0"/>
+      </div>
+      <div class="form-field">
+        <label>Stock mínimo (alerta)</label>
+        <input type="number" id="prod-stock-min" placeholder="5" min="0"/>
+      </div>
+      <div class="form-field full-span">
+        <label>Descripción</label>
+        <textarea id="prod-desc" rows="2" placeholder="Descripción opcional del artículo"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitProducto()">Guardar producto</button>
+  </div>
+</div>
+
+<!-- Modal: Colaborador -->
+<div id="modal-colaborador" class="modal modal-md">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title" id="modal-colab-title">Nueva colaboradora</div>
+      <div class="modal-sub">Información de contacto y condiciones</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="colab-id"/>
+    <div class="form-grid-2">
+      <div class="form-field">
+        <label>Nombre completo *</label>
+        <input type="text" id="colab-nombre" placeholder="Nombre de la colaboradora"/>
+      </div>
+      <div class="form-field">
+        <label>Especialidad</label>
+        <input type="text" id="colab-especialidad" placeholder="Ej. Joyería artesanal"/>
+      </div>
+      <div class="form-field">
+        <label>Teléfono</label>
+        <input type="text" id="colab-telefono" placeholder="10 dígitos"/>
+      </div>
+      <div class="form-field">
+        <label>Correo electrónico</label>
+        <input type="email" id="colab-email" placeholder="correo@ejemplo.com"/>
+      </div>
+      <div class="form-field">
+        <label>% Comisión colaboradora</label>
+        <div class="input-suffix-wrap">
+          <input type="number" id="colab-comision" value="70" min="0" max="100"/>
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Banco</label>
+        <input type="text" id="colab-banco" placeholder="Nombre del banco"/>
+      </div>
+      <div class="form-field full-span">
+        <label>Cuenta / CLABE</label>
+        <input type="text" id="colab-cuenta" placeholder="18 dígitos"/>
+      </div>
+      <div class="form-field full-span">
+        <label>Notas</label>
+        <textarea id="colab-notas" rows="2" placeholder="Condiciones especiales, acuerdos, etc."></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitColaborador()">Guardar colaboradora</button>
+  </div>
+</div>
+
+<!-- Modal: Movimiento contable -->
+<div id="modal-movimiento" class="modal modal-sm">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Nuevo movimiento</div>
+      <div class="modal-sub">Registra un ingreso o egreso manual</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-field">
+      <label>Tipo *</label>
+      <select id="mov-tipo">
+        <option value="ingreso">Ingreso</option>
+        <option value="egreso">Egreso</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Concepto *</label>
+      <input type="text" id="mov-concepto" placeholder="Descripción del movimiento"/>
+    </div>
+    <div class="form-field">
+      <label>Categoría</label>
+      <select id="mov-categoria">
+        <option value="venta">Venta</option>
+        <option value="pago_colaborador">Pago a colaboradora</option>
+        <option value="gasto_operativo">Gasto operativo</option>
+        <option value="renta">Renta</option>
+        <option value="salario">Salario</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Monto *</label>
+      <div class="input-prefix-wrap">
+        <span class="input-prefix">$</span>
+        <input type="number" id="mov-monto" placeholder="0.00" min="0" step="0.01"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Notas</label>
+      <textarea id="mov-notas" rows="2" placeholder="Observaciones adicionales"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitMovimiento()">Registrar</button>
+  </div>
+</div>
+
+<!-- Modal: Detalle venta -->
+<div id="modal-detalle-venta" class="modal modal-md">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title" id="dv-folio">Detalle de venta</div>
+      <div class="modal-sub" id="dv-fecha"></div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body" id="dv-body"></div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cerrar</button>
+  </div>
+</div>
+
+<!-- Modal: Nueva consignación -->
+<div id="modal-consignacion" class="modal modal-md">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Registrar entrada de consignación</div>
+      <div class="modal-sub">Artículos entregados por una colaboradora</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid-2">
+      <div class="form-field">
+        <label>Colaboradora *</label>
+        <select id="consig-colaborador" onchange="loadProductosDeColab()">
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Producto *</label>
+        <select id="consig-producto">
+          <option value="">Primero selecciona colaboradora</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Cantidad ingresada *</label>
+        <input type="number" id="consig-cantidad" placeholder="0" min="1"/>
+      </div>
+      <div class="form-field">
+        <label>Fecha de entrada</label>
+        <input type="date" id="consig-fecha"/>
+      </div>
+      <div class="form-field full-span">
+        <label>Notas</label>
+        <textarea id="consig-notas" rows="2" placeholder="Condiciones, acuerdos, observaciones…"></textarea>
+      </div>
+    </div>
+    <div id="consig-preview" class="hidden" style="margin-top:8px;padding:14px;background:var(--surface-2);border-radius:var(--radius-md);border:1px solid var(--rose-mist)">
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Vista previa</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;color:var(--ink-muted)">Precio venta</div><div id="prev-precio" style="font-family:var(--font-display);font-size:18px;font-weight:500"></div></div>
+        <div><div style="font-size:11px;color:var(--ink-muted)">Comisión colaboradora</div><div id="prev-comision" style="font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--rose-deep)"></div></div>
+        <div><div style="font-size:11px;color:var(--ink-muted)">Ingreso tienda (est.)</div><div id="prev-tienda" style="font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--success)"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitConsignacion()">Registrar entrada</button>
+  </div>
+</div>
+
+<!-- Modal: Registrar pago a colaboradora -->
+<div id="modal-pago" class="modal modal-sm">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Registrar pago</div>
+      <div class="modal-sub">Liquidación a colaboradora</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-field">
+      <label>Colaboradora *</label>
+      <select id="pago-colaborador" onchange="calcPagoEstimado()">
+        <option value="">Seleccionar…</option>
+      </select>
+    </div>
+    <div id="pago-estimado" class="hidden" style="padding:12px;background:var(--rose-pale);border-radius:var(--radius-md);margin-bottom:4px;border:1px solid var(--rose-light)">
+      <div style="font-size:11px;color:var(--ink-muted);margin-bottom:4px">Comisión estimada del período</div>
+      <div id="pago-estimado-val" style="font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--rose-deep)"></div>
+    </div>
+    <div class="form-field">
+      <label>Monto a pagar *</label>
+      <div class="input-prefix-wrap">
+        <span class="input-prefix">$</span>
+        <input type="number" id="pago-monto" placeholder="0.00" min="0" step="0.01"/>
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field">
+        <label>Período inicio</label>
+        <input type="date" id="pago-inicio"/>
+      </div>
+      <div class="form-field">
+        <label>Período fin</label>
+        <input type="date" id="pago-fin"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Método de pago *</label>
+      <select id="pago-metodo">
+        <option value="transferencia">Transferencia bancaria</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Referencia / comprobante</label>
+      <input type="text" id="pago-referencia" placeholder="Número de transferencia o folio"/>
+    </div>
+    <div class="form-field">
+      <label>Notas</label>
+      <textarea id="pago-notas" rows="2" placeholder="Observaciones adicionales…"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitPago()">Registrar pago</button>
+  </div>
+</div>
+
+<!-- Modal: Categoría -->
+<div id="modal-categoria" class="modal modal-sm">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Nueva categoría</div>
+      <div class="modal-sub">Agrupa tus productos por tipo</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-field">
+      <label>Nombre *</label>
+      <input type="text" id="cat-nombre" placeholder="Ej. Joyería artesanal"/>
+    </div>
+    <div class="form-field">
+      <label>Descripción</label>
+      <textarea id="cat-desc" rows="2" placeholder="Descripción breve de esta categoría"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitCategoria()">Guardar categoría</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/reportes.js"></script>
+</body>
+</html>

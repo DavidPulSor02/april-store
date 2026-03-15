@@ -1,0 +1,143 @@
+const router   = require('express').Router();
+const mongoose = require('mongoose');
+const auth     = require('../middleware/auth');
+const { Venta, VentaItem, Producto, MovimientoContable } = require('../models');
+
+// GET /api/ventas
+router.get('/', auth, async (req, res) => {
+  const { desde, hasta, estatus, metodo_pago, limit = 50, page = 1 } = req.query;
+  const filter = {};
+  if (estatus)     filter.estatus     = estatus;
+  if (metodo_pago) filter.metodo_pago = metodo_pago;
+  if (desde || hasta) {
+    filter.fecha = {};
+    if (desde) filter.fecha.$gte = new Date(desde);
+    if (hasta) filter.fecha.$lte = new Date(hasta);
+  }
+
+  const skip   = (page - 1) * limit;
+  const [ventas, total] = await Promise.all([
+    Venta.find(filter).populate('usuario_id', 'nombre').sort({ fecha: -1 }).skip(skip).limit(+limit),
+    Venta.countDocuments(filter),
+  ]);
+
+  res.json({ success: true, data: ventas, total, page: +page, pages: Math.ceil(total / limit) });
+});
+
+// GET /api/ventas/:id — con items
+router.get('/:id', auth, async (req, res) => {
+  const venta = await Venta.findById(req.params.id).populate('usuario_id', 'nombre');
+  if (!venta) return res.status(404).json({ success: false, message: 'No encontrada' });
+  const items = await VentaItem.find({ venta_id: venta._id })
+    .populate('producto_id', 'nombre precio_venta')
+    .populate('colaborador_id', 'nombre');
+  res.json({ success: true, data: { ...venta.toObject(), items } });
+});
+
+// POST /api/ventas — registrar venta completa (con transacción)
+router.post('/', auth, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { items, metodo_pago, descuento = 0, notas } = req.body;
+    if (!items?.length) throw { status: 400, message: 'Se requiere al menos un artículo' };
+
+    let subtotal = 0;
+    const itemsData = [];
+
+    for (const item of items) {
+      const producto = await Producto.findById(item.producto_id).session(session);
+      if (!producto)              throw { status: 404, message: `Producto ${item.producto_id} no encontrado` };
+      if (producto.stock_actual < item.cantidad) throw { status: 400, message: `Stock insuficiente: ${producto.nombre}` };
+
+      const itemSubtotal = +(producto.precio_venta * item.cantidad).toFixed(2);
+      subtotal += itemSubtotal;
+
+      itemsData.push({
+        producto_id:         producto._id,
+        colaborador_id:      producto.colaborador_id,
+        cantidad:            item.cantidad,
+        precio_unitario:     producto.precio_venta,
+        subtotal:            itemSubtotal,
+        porcentaje_comision: item.porcentaje_comision ?? 70,
+        comision_colaborador: +(itemSubtotal * (item.porcentaje_comision ?? 70) / 100).toFixed(2),
+        comision_tienda:      +(itemSubtotal * (1 - (item.porcentaje_comision ?? 70) / 100)).toFixed(2),
+      });
+
+      // Descontar stock
+      await Producto.findByIdAndUpdate(
+        producto._id,
+        { $inc: { stock_actual: -item.cantidad } },
+        { session }
+      );
+    }
+
+    const total = +(subtotal - descuento).toFixed(2);
+
+    const [venta] = await Venta.create([{
+      usuario_id: req.usuario.id,
+      subtotal,
+      descuento,
+      total,
+      metodo_pago,
+      notas,
+      estatus: 'completada',
+    }], { session });
+
+    // Crear items (los hooks pre-save no funcionan en insertMany con validadores, usamos create en loop)
+    for (const itemData of itemsData) {
+      await VentaItem.create([{ ...itemData, venta_id: venta._id }], { session });
+    }
+
+    // Movimiento contable
+    await MovimientoContable.create([{
+      usuario_id:        req.usuario.id,
+      referencia_id:     venta._id,
+      referencia_modelo: 'Venta',
+      tipo:              'ingreso',
+      concepto:          `Venta ${venta.folio} — ${metodo_pago}`,
+      categoria_contable:'venta',
+      monto:             total,
+      saldo_resultante:  total,
+      fecha:             venta.fecha,
+    }], { session });
+
+    await session.commitTransaction();
+    res.status(201).json({ success: true, data: venta, folio: venta.folio });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
+  }
+});
+
+// PATCH /api/ventas/:id/cancelar
+router.patch('/:id/cancelar', auth, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const venta = await Venta.findById(req.params.id).session(session);
+    if (!venta || venta.estatus !== 'completada')
+      throw { status: 400, message: 'Venta no cancelable' };
+
+    venta.estatus = 'cancelada';
+    await venta.save({ session });
+
+    // Revertir stock
+    const items = await VentaItem.find({ venta_id: venta._id }).session(session);
+    for (const item of items) {
+      await Producto.findByIdAndUpdate(item.producto_id, { $inc: { stock_actual: item.cantidad } }, { session });
+    }
+
+    await session.commitTransaction();
+    res.json({ success: true, message: 'Venta cancelada' });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
+  }
+});
+
+module.exports = router;
