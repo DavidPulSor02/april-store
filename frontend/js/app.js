@@ -138,6 +138,12 @@ function showApp() {
 
   const u = State.usuario;
   if (u) {
+    // Si es cajera, mandarla directo al punto de venta móvil
+    if (u.rol === 'cajera') {
+      window.location.href = '/mobile';
+      return;
+    }
+
     document.getElementById('user-name').textContent     = u.nombre;
     document.getElementById('user-role').textContent     = u.rol === 'admin' ? 'Administradora' : 'Cajera';
     document.getElementById('user-initials').textContent = initials(u.nombre);
