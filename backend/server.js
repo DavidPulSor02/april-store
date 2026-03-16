@@ -27,6 +27,7 @@ app.use('/api/pagos',          require('./routes/pagos'));
 app.use('/api/contabilidad',   require('./routes/contabilidad'));
 app.use('/api/dashboard',      require('./routes/dashboard'));
 app.use('/api/tickets',        require('./routes/tickets'));
+app.use('/api/caja',           require('./routes/caja'));
 
 // ── SPA routes ────────────────────────────────────────────
 app.get('/mobile',   (req, res) => res.sendFile(path.join(__dirname, '../frontend/mobile/index.html')));

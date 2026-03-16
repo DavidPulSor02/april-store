@@ -126,15 +126,58 @@ function handleIPadLogout() {
   showLoginScreen();
 }
 
-function enterApp() {
+async function enterApp() {
   document.getElementById('ipad-login').classList.add('hidden');
   document.getElementById('ipad-app').classList.remove('hidden');
+  
   const badge = document.getElementById('user-badge');
   if (badge) badge.textContent = initials(POS.usuario?.nombre||'');
+
+  // Restricciones por rol
+  const dashBtn = document.getElementById('btn-to-dashboard');
+  if (dashBtn) dashBtn.style.display = POS.usuario?.rol === 'admin' ? 'flex' : 'none';
+
   buildCatTabs(); renderProductGrid(PRODUCTOS); renderCart();
   updateFooter(); loadResumenDia(); checkAlertas();
   setInterval(updateFooter, 60000); setInterval(loadResumenDia, 300000);
   loadProductosAPI();
+  
+  // Validar estado de la caja
+  checkEstadoCaja();
+}
+
+async function checkEstadoCaja() {
+  try {
+    const r = await fetch('/api/caja/estado', { headers: apiH() });
+    const d = await r.json();
+    if (d.success && !d.caja) {
+      document.getElementById('apertura-modal').classList.remove('hidden');
+    }
+  } catch(e) {
+    console.error('Error al validar caja:', e);
+  }
+}
+
+async function abrirCaja() {
+  const monto = parseFloat(document.getElementById('monto-apertura').value);
+  if (isNaN(monto) || monto < 0) { iToast('Ingresa un monto válido', 'error'); return; }
+
+  try {
+    const r = await fetch('/api/caja/abrir', {
+      method: 'POST',
+      headers: apiH(),
+      body: JSON.stringify({ monto_apertura: monto })
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('apertura-modal').classList.add('hidden');
+      iToast('Caja abierta con éxito', 'success');
+    } else {
+      iToast(d.message || 'Error al abrir caja', 'error');
+    }
+  } catch(e) {
+    iToast('Error de conexión', 'error');
+  }
 }
 
 function goToDashboard() { window.location.href = '/'; }
@@ -482,4 +525,45 @@ function nuevaVenta() {
   document.getElementById('sum-descuento').value='0'; recalcTotals();
   document.getElementById('prod-search').value='';
   document.getElementById('clear-search').classList.add('hidden'); applyFilters();
+}
+
+// ══════════════════════════════════════════════════════════
+//  CIERRE DE CAJA
+// ══════════════════════════════════════════════════════════
+function openCierre() {
+  const totalVentas = RESUMEN.ventas;
+  document.getElementById('cierre-ventas-total').textContent = fmt(totalVentas);
+  document.getElementById('cierre-efectivo-esperado').textContent = fmt(totalVentas); // Simplificado
+  document.getElementById('cierre-modal').classList.remove('hidden');
+}
+
+function closeCierre() {
+  document.getElementById('cierre-modal').classList.add('hidden');
+}
+
+async function confirmarCierre() {
+  const monto = parseFloat(document.getElementById('monto-cierre').value);
+  const notas = document.getElementById('cierre-notas').value;
+  if (isNaN(monto) || monto < 0) { iToast('Ingresa un monto válido', 'error'); return; }
+
+  try {
+    const r = await fetch('/api/caja/cerrar', {
+      method: 'POST',
+      headers: apiH(),
+      body: JSON.stringify({ 
+        monto_cierre: monto, 
+        ventas_totales: RESUMEN.ventas,
+        notas 
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      iToast('Caja cerrada con éxito. ¡Buen turno!', 'success');
+      setTimeout(() => handleIPadLogout(), 1500);
+    } else {
+      iToast(d.message || 'Error al cerrar caja', 'error');
+    }
+  } catch(e) {
+    iToast('Error de conexión', 'error');
+  }
 }

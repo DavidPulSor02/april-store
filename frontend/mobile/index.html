@@ -58,6 +58,63 @@
 </div>
 
 <!-- ══ APP ════════════════════════════════════════════════ -->
+<!-- ══ APERTURA DE CAJA ══════════════════════════════════ -->
+<div id="apertura-modal" class="apertura-modal hidden">
+  <div class="apertura-card">
+    <div class="apertura-logo">
+      <svg width="32" height="32" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="var(--rose)"/><path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="white"/></svg>
+      <span class="apertura-brand">April Store</span>
+    </div>
+    <h2 class="apertura-title">Apertura de Caja</h2>
+    <p class="apertura-sub">Ingresa el monto inicial para comenzar el día</p>
+    
+    <div class="apertura-field">
+      <label>Monto inicial en caja</label>
+      <div class="apertura-input-wrap">
+        <span>$</span>
+        <input type="number" id="monto-apertura" placeholder="0.00" min="0" step="1"/>
+      </div>
+    </div>
+    
+    <button class="btn-abrir-caja" onclick="abrirCaja()">
+      Confirmar Apertura
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══ CIERRE DE CAJA ════════════════════════════════════ -->
+<div id="cierre-modal" class="cobro-modal hidden">
+  <div class="cobro-bg" onclick="closeCierre()"></div>
+  <div class="cobro-card">
+    <div class="cobro-header">
+      <div class="cobro-title">Cierre de Caja</div>
+      <button class="cobro-close" onclick="closeCierre()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="cierre-body">
+      <div class="cierre-summary">
+        <div class="cierre-line"><span>Ventas registradas</span><strong id="cierre-ventas-total">$0.00</strong></div>
+        <div class="cierre-line"><span>Efectivo esperado</span><strong id="cierre-efectivo-esperado">$0.00</strong></div>
+      </div>
+      <div class="cobro-field-label">Monto real en caja (conteo físico)</div>
+      <div class="recibido-input-wrap">
+        <span>$</span>
+        <input type="number" id="monto-cierre" placeholder="0.00"/>
+      </div>
+      <div class="cierre-field">
+        <label>Notas del cierre</label>
+        <textarea id="cierre-notas" placeholder="Observaciones sobre sobrantes o faltantes..."></textarea>
+      </div>
+    </div>
+    <div class="cobro-actions">
+      <button class="cobro-cancel" onclick="closeCierre()">Cancelar</button>
+      <button class="cobro-confirm" onclick="confirmarCierre()">Finalizar Turno</button>
+    </div>
+  </div>
+</div>
+
 <div id="ipad-app" class="ipad-app hidden">
 
   <!-- ── PANEL IZQUIERDO ───────────────────────────────── -->
@@ -80,7 +137,7 @@
           </button>
           <span id="stock-dot" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid white"></span>
         </div>
-        <button class="icon-pill nav-pill" onclick="goToDashboard()">
+        <button class="icon-pill nav-pill" id="btn-to-dashboard" onclick="goToDashboard()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         </button>
         <!-- Avatar usuario con logout -->
@@ -88,6 +145,10 @@
           <div class="user-badge" id="user-badge" onclick="toggleUserMenu()">AS</div>
           <div class="user-dropdown hidden" id="user-dropdown">
             <div class="user-dropdown-name" id="user-badge-name"></div>
+            <button onclick="openCierre()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6"/></svg>
+              Cerrar caja
+            </button>
             <button onclick="handleIPadLogout()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
               Cerrar sesión

@@ -153,6 +153,20 @@ const movimientoContableSchema = new Schema({
 movimientoContableSchema.index({ fecha: -1 });
 movimientoContableSchema.index({ tipo: 1, fecha: -1 });
 
+// ── 10. CAJA (SESIONES) ───────────────────────────────────
+const cajaSchema = new Schema({
+  usuario_id:      { type: Schema.Types.ObjectId, ref: 'Usuario', required: true },
+  monto_apertura:  { type: Number, required: true },
+  monto_cierre:    { type: Number },
+  ventas_totales:  { type: Number, default: 0 },
+  fecha_apertura:  { type: Date, default: Date.now },
+  fecha_cierre:    { type: Date },
+  estatus:         { type: String, enum: ['abierta', 'cerrada'], default: 'abierta' },
+  notas:           { type: String },
+}, { timestamps: { createdAt: 'creado_en', updatedAt: 'actualizado_en' } });
+
+cajaSchema.index({ usuario_id: 1, estatus: 1 });
+
 // ── Exports ───────────────────────────────────────────────
 module.exports = {
   Usuario:             model('Usuario',             usuarioSchema),
@@ -164,4 +178,5 @@ module.exports = {
   VentaItem:           model('VentaItem',           ventaItemSchema),
   PagoColaborador:     model('PagoColaborador',     pagoColaboradorSchema),
   MovimientoContable:  model('MovimientoContable',  movimientoContableSchema),
+  Caja:                model('Caja',                cajaSchema),
 };
