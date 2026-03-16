@@ -250,3 +250,11 @@ async function confirmarVentaPOS() {
     btn.textContent = 'Finalizar venta';
   }
 }
+
+function clearCartPOS() {
+  if (POS_STATE.cart.length === 0) return;
+  if (confirm('¿Vaciar el carrito actual?')) {
+    POS_STATE.cart = [];
+    renderPOSCart();
+  }
+}
