@@ -52,6 +52,7 @@ const productoSchema = new Schema({
   precio_costo:   { type: Number, default: 0 },
   stock_actual:   { type: Number, default: 0, min: 0 },
   stock_minimo:   { type: Number, default: 5 },
+  imagen_url:     { type: String },
   estatus:        { type: String, enum: ['activo','inactivo','agotado'], default: 'activo' },
 }, { timestamps: { createdAt: 'creado_en', updatedAt: 'actualizado_en' } });
 

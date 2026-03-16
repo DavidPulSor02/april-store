@@ -25,6 +25,7 @@ async function loadProductosPOS() {
         sku: p.sku || '',
         precio: p.precio_venta,
         stock: p.stock_actual,
+        imagen: p.imagen_url || '',
         categoria: p.categoria_id?.nombre || 'General'
       }));
       renderPOSGrid();
@@ -79,10 +80,14 @@ function renderPOSGrid(query = '') {
   }
 
   grid.innerHTML = filtered.map(p => `
-    <div class="pos-prod-card ${p.stock <= 0 ? 'out-of-stock' : ''}" onclick="addToCartPOS('${p._id}')">
-      <div class="pos-prod-stock ${p.stock <= 5 ? 'low' : ''}">${p.stock} dispon.</div>
-      <div class="pos-prod-name">${p.nombre}</div>
-      <div class="pos-prod-price">${fmt(p.precio)}</div>
+    <div class="pos-card ${p.stock <= 0 ? 'out-of-stock' : ''}" onclick="addToCartPOS('${p._id}')">
+      <div class="pos-card-img">
+        <img src="${p.imagen || 'https://via.placeholder.com/150?text=Sin+Imagen'}" alt="${p.nombre}" loading="lazy">
+      </div>
+      <div class="pos-card-stock ${p.stock <= 5 ? 'low' : ''}">${p.stock} pzas.</div>
+      <div class="pos-card-cat">${p.categoria}</div>
+      <div class="pos-card-name">${p.nombre}</div>
+      <div class="pos-card-price">${fmt(p.precio)}</div>
     </div>
   `).join('');
 }
