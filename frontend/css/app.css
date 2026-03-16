@@ -47,6 +47,16 @@
   --font-ui:     'DM Sans', system-ui, sans-serif;
 }
 
+/* Fix for integrated POS */
+.page#page-pos {
+  height: calc(100vh - var(--topbar-h));
+  overflow: hidden;
+  display: none;
+}
+.page#page-pos.active {
+  display: block;
+}
+
 html { font-size: 15px; }
 body {
   font-family: var(--font-ui);

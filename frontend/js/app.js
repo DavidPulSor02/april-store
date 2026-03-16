@@ -137,23 +137,111 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
 
   const u = State.usuario;
-  if (u) {
-    // Si es cajera, mandarla directo al punto de venta móvil
-    if (u.rol === 'cajera') {
-      window.location.href = '/mobile';
-      return;
-    }
+  if (!u) return;
 
-    document.getElementById('user-name').textContent     = u.nombre;
-    document.getElementById('user-role').textContent     = u.rol === 'admin' ? 'Administradora' : 'Cajera';
-    document.getElementById('user-initials').textContent = initials(u.nombre);
+  document.getElementById('user-name').textContent     = u.nombre;
+  document.getElementById('user-role').textContent     = u.rol === 'admin' ? 'Administradora' : 'Cajera';
+  document.getElementById('user-initials').textContent = initials(u.nombre);
+
+  // --- RESTRICCIONES POR ROL ---
+  const isAdmin = u.rol === 'admin';
+  
+  // Ocultar grupos de navegación si no es admin
+  document.getElementById('nav-group-principal').style.display      = isAdmin ? 'block' : 'none';
+  document.getElementById('nav-group-catalogo').style.display       = isAdmin ? 'block' : 'none';
+  document.getElementById('nav-group-colaboradores').style.display  = isAdmin ? 'block' : 'none';
+  document.getElementById('nav-group-finanzas').style.display       = isAdmin ? 'block' : 'none';
+  
+  // Elementos extra en el topbar
+  const topbarCta = document.getElementById('topbar-cta');
+  if (topbarCta) topbarCta.style.display = isAdmin ? 'flex' : 'none';
+
+  // Mostrar opción de cierre de caja para cajeras
+  const cierreNav = document.getElementById('nav-cierre-caja');
+  if (cierreNav) cierreNav.classList.toggle('hidden', isAdmin);
+
+  // Redirección inicial
+  if (isAdmin) {
+    navigate('dashboard');
+    loadDashboard();
+    checkStockAlerts();
+  } else {
+    navigate('pos');
+    // Forzar carga de productos POS
+    if (typeof loadProductosPOS === 'function') loadProductosPOS();
   }
 
-  // Asegurar que estamos en el dashboard al entrar
-  navigate('dashboard');
+  // Validar sesión de caja
+  checkEstadoCaja();
+}
+
+/**
+ * SESIONES DE CAJA
+ */
+async function checkEstadoCaja() {
+  if (State.token === 'demo-token') return;
+  try {
+    const res = await Api.get('/api/caja/estado');
+    if (res.success && !res.caja) {
+      openModal('modal-apertura');
+    }
+  } catch (e) {
+    console.error('Error validando caja:', e);
+  }
+}
+
+async function confirmarApertura() {
+  const monto = parseFloat(document.getElementById('apertura-monto').value);
+  if (isNaN(monto) || monto < 0) {
+    showToast('Ingresa un monto inicial válido', 'error');
+    return;
+  }
+
+  try {
+    const res = await Api.post('/api/caja/abrir', { monto_apertura: monto });
+    if (res.success) {
+      closeAllModals();
+      showToast('Caja abierta con éxito', 'success');
+    } else {
+      showToast(res.message || 'Error al abrir caja', 'error');
+    }
+  } catch (e) {
+    showToast('Error de conexión con el servidor', 'error');
+  }
+}
+
+function openCierreCaja() {
+  // Aquí idealmente cargaríamos los totales del turno desde el servidor
+  // Por ahora usaremos un estimado de ventas de la sesión actual
+  const ventasTurno = State.ventasTurno || 0; 
+  document.getElementById('cierre-ventas-val').textContent = fmt(ventasTurno);
+  document.getElementById('cierre-esperado-val').textContent = fmt(ventasTurno); 
+  openModal('modal-cierre');
+}
+
+async function submitCierreCaja() {
+  const monto = parseFloat(document.getElementById('cierre-monto-real').value);
+  const notas = document.getElementById('cierre-notas').value;
   
-  loadDashboard();
-  checkStockAlerts();
+  if (isNaN(monto) || monto < 0) {
+    showToast('Ingresa el monto contado en caja', 'error');
+    return;
+  }
+
+  try {
+    const res = await Api.post('/api/caja/cerrar', { 
+      monto_cierre: monto,
+      notas 
+    });
+    if (res.success) {
+      showToast('Caja cerrada. ¡Buen turno!', 'success');
+      setTimeout(() => handleLogout(), 1500);
+    } else {
+      showToast(res.message || 'Error al cerrar caja', 'error');
+    }
+  } catch (e) {
+    showToast('Error al procesar el cierre', 'error');
+  }
 }
 
 // ── NAVIGATION ────────────────────────────────────────────

@@ -52,7 +52,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-group">
+      <div class="nav-group" id="nav-group-principal">
         <div class="nav-group-label">Principal</div>
         <button class="nav-item active" data-page="dashboard">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -60,7 +60,7 @@
         </button>
       </div>
 
-      <div class="nav-group">
+      <div class="nav-group" id="nav-group-catalogo">
         <div class="nav-group-label">Catálogo</div>
         <button class="nav-item" data-page="productos">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -72,7 +72,7 @@
         </button>
       </div>
 
-      <div class="nav-group">
+      <div class="nav-group" id="nav-group-colaboradores">
         <div class="nav-group-label">Colaboradores</div>
         <button class="nav-item" data-page="colaboradores">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.85"/></svg>
@@ -88,7 +88,7 @@
         </button>
       </div>
 
-      <div class="nav-group">
+      <div class="nav-group" id="nav-group-finanzas">
         <div class="nav-group-label">Finanzas</div>
         <button class="nav-item" data-page="ventas">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
@@ -99,11 +99,15 @@
           <span>Contabilidad</span>
         </button>
       </div>
-      <div class="nav-group">
+      <div class="nav-group" id="nav-group-pos">
         <div class="nav-group-label">Ventas</div>
         <button class="nav-item" data-page="pos">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
           <span>Terminal POS</span>
+        </button>
+        <button class="nav-item hidden" id="nav-cierre-caja" onclick="openCierreCaja()">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6"/></svg>
+          <span>Cerrar Caja</span>
         </button>
       </div>
     </nav>
@@ -888,12 +892,81 @@
   </div>
 </div>
 
+<!-- Modal: Apertura de Caja -->
+<div id="modal-apertura" class="modal modal-sm" data-static="true">
+  <div class="modal-header">
+    <div style="text-align:center; width:100%">
+      <div class="login-logo" style="justify-content:center; margin-bottom:16px">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="var(--rose)"/><path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="white"/></svg>
+        <span class="login-brand">April Store</span>
+      </div>
+      <div class="modal-title">Apertura de Caja</div>
+      <div class="modal-sub">Ingresa el monto inicial para comenzar el turno</div>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="form-field">
+      <label>Monto inicial en caja</label>
+      <div class="input-prefix-wrap">
+        <span class="input-prefix">$</span>
+        <input type="number" id="apertura-monto" placeholder="0.00" min="0" step="1"/>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-primary full-span" onclick="confirmarApertura()">
+      Confirmar Apertura
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Cierre de Caja -->
+<div id="modal-cierre" class="modal modal-sm">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Cierre de Caja</div>
+      <div class="modal-sub">Finalizar turno y arqueo</div>
+    </div>
+    <button class="modal-close" onclick="closeAllModals()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="cierre-stats" style="background:var(--rose-pale); padding:16px; border-radius:var(--radius-md); margin-bottom:20px; border:1px solid var(--rose-light)">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px">
+        <span>Ventas del turno</span>
+        <strong id="cierre-ventas-val">$0.00</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px">
+        <span>Efectivo esperado</span>
+        <strong id="cierre-esperado-val">$0.00</strong>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Monto real en caja (conteo físico)</label>
+      <div class="input-prefix-wrap">
+        <span class="input-prefix">$</span>
+        <input type="number" id="cierre-monto-real" placeholder="0.00"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Notas del cierre</label>
+      <textarea id="cierre-notas" rows="2" placeholder="Observaciones sobre sobrantes/faltantes…"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="submitCierreCaja()">Finalizar turno</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script src="js/reportes.js"></script>
 <script src="mobile/js/scanner.js"></script>
 <script src="mobile/js/ticket.js"></script>
-<script src="mobile/js/pos_integrated.js"></script>
+<script src="js/pos_integrated.js"></script>
 </body>
 </html>
