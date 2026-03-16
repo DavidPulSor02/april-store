@@ -45,10 +45,17 @@ app.use((err, req, res, next) => {
 
 // ── Conexión a MongoDB ────────────────────────────────────
 const PORT    = process.env.PORT    || 3000;
-const MONGODB = process.env.MONGODB_URI || 'mongodb://localhost:27017/april-store';
+const MONGODB = process.env.MONGODB_URI;
+
+if (!MONGODB && process.env.NODE_ENV === 'production') {
+  console.error('❌  ERROR: MONGODB_URI no está definida en el entorno de producción.');
+  process.exit(1);
+}
+
+const mongoUri = MONGODB || 'mongodb://localhost:27017/april-store';
 
 mongoose
-  .connect(MONGODB)
+  .connect(mongoUri)
   .then(() => {
     console.log('✅  MongoDB conectado');
   })
@@ -59,9 +66,8 @@ mongoose
 // Solo iniciar el servidor si se ejecuta este archivo directamente (no en Vercel)
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`🚀  Servidor:  http://localhost:${PORT}`);
-    console.log(`📱  iPad POS:  http://localhost:${PORT}/mobile`);
-    console.log(`🔑  Admin:     admin@aprilstore.mx / admin123`);
+    console.log(`🚀  Servidor corriendo en el puerto ${PORT}`);
+    console.log(`🏠  Local: http://localhost:${PORT}`);
   });
 }
 

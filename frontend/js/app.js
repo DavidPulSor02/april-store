@@ -10,81 +10,6 @@ const State = {
   cacheColaboradores: [],
 };
 
-// ── Mock data (para demo sin backend) ────────────────────
-const MOCK = {
-  usuario: { id: '1', nombre: 'Abril Vega', rol: 'admin' },
-  dashboard: {
-    ventas_mes: { total: 48320, count: 312 },
-    ventas_hoy: { total: 6240,  count: 87  },
-    productos_activos: 312,
-    colaboradores_activos: 8,
-    alertas_stock: 14,
-    grafica_dias: [
-      { _id: 'Lun', total: 4200 }, { _id: 'Mar', total: 5800 },
-      { _id: 'Mié', total: 3900 }, { _id: 'Jue', total: 6700 },
-      { _id: 'Vie', total: 7200 }, { _id: 'Sáb', total: 9100 },
-      { _id: 'Dom', total: 8400 }, { _id: 'Hoy', total: 6240 },
-    ],
-    top_colaboradores: [
-      { colaborador: { nombre: 'Lucía Martínez' }, total: 4820, piezas: 24, comision: 3374 },
-      { colaborador: { nombre: 'Sofía Reyes'    }, total: 3960, piezas: 31, comision: 2772 },
-      { colaborador: { nombre: 'María Carrillo' }, total: 2340, piezas: 17, comision: 1638 },
-      { colaborador: { nombre: 'Daniela Torres' }, total: 1780, piezas: 41, comision: 1246 },
-    ],
-  },
-  colaboradores: [
-    { _id: 'c1', nombre: 'Lucía Martínez',  especialidad: 'Joyería artesanal',   porcentaje_comision: 70, estatus: 'activo', email: 'lucia@mail.com',   telefono: '2281234567', ventas_mes: 4820, piezas: 24 },
-    { _id: 'c2', nombre: 'Sofía Reyes',     especialidad: 'Bolsos artesanales',  porcentaje_comision: 70, estatus: 'activo', email: 'sofia@mail.com',   telefono: '2289876543', ventas_mes: 3960, piezas: 31 },
-    { _id: 'c3', nombre: 'María Carrillo',  especialidad: 'Accesorios de cabello',porcentaje_comision: 70, estatus: 'activo', email: 'maria@mail.com',  telefono: '2281122334', ventas_mes: 2340, piezas: 17 },
-    { _id: 'c4', nombre: 'Daniela Torres',  especialidad: 'Bisutería fina',      porcentaje_comision: 70, estatus: 'activo', email: 'daniela@mail.com', telefono: '2285544332', ventas_mes: 1780, piezas: 41 },
-    { _id: 'c5', nombre: 'Carmen Vega',     especialidad: 'Ropa bordada',        porcentaje_comision: 65, estatus: 'activo', email: 'carmen@mail.com',  telefono: '2280011223', ventas_mes: 890,  piezas: 12 },
-  ],
-  categorias: [
-    { _id: 'cat1', nombre: 'Joyería',        activa: true },
-    { _id: 'cat2', nombre: 'Bolsos',         activa: true },
-    { _id: 'cat3', nombre: 'Accesorios cabello', activa: true },
-    { _id: 'cat4', nombre: 'Bisutería',      activa: true },
-    { _id: 'cat5', nombre: 'Ropa',           activa: true },
-  ],
-  productos: [
-    { _id: 'p1', nombre: 'Aretes Dorados Luna',    sku: 'ARE-001', precio_venta: 190, precio_costo: 60,  stock_actual: 18, stock_minimo: 5,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'Lucía M.' },  categoria_id: { nombre: 'Joyería'  } },
-    { _id: 'p2', nombre: 'Bolso Tejido Boho',      sku: 'BOL-002', precio_venta: 450, precio_costo: 150, stock_actual: 7,  stock_minimo: 8,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'Sofía R.' },  categoria_id: { nombre: 'Bolsos'   } },
-    { _id: 'p3', nombre: 'Diadema Flores Secas',   sku: 'DIA-003', precio_venta: 120, precio_costo: 40,  stock_actual: 9,  stock_minimo: 5,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'María C.' },  categoria_id: { nombre: 'Accesorios cabello' } },
-    { _id: 'p4', nombre: 'Collar Perlas Rojas',    sku: 'COL-004', precio_venta: 280, precio_costo: 90,  stock_actual: 11, stock_minimo: 5,  tipo: 'propio',       estatus: 'activo',  colaborador_id: null,                    categoria_id: { nombre: 'Joyería'  } },
-    { _id: 'p5', nombre: 'Pulseras Macramé',       sku: 'PUL-005', precio_venta: 95,  precio_costo: 30,  stock_actual: 3,  stock_minimo: 8,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'Daniela T.'},  categoria_id: { nombre: 'Bisutería' } },
-    { _id: 'p6', nombre: 'Cinturón Trenzado Rosa', sku: 'CIN-006', precio_venta: 320, precio_costo: 100, stock_actual: 22, stock_minimo: 5,  tipo: 'propio',       estatus: 'activo',  colaborador_id: null,                    categoria_id: { nombre: 'Accesorios cabello' } },
-    { _id: 'p7', nombre: 'Aretes Turquesa Boho',   sku: 'ARE-007', precio_venta: 150, precio_costo: 50,  stock_actual: 14, stock_minimo: 5,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'Lucía M.' },  categoria_id: { nombre: 'Joyería'  } },
-    { _id: 'p8', nombre: 'Blusa Bordada Floral',   sku: 'BLU-008', precio_venta: 580, precio_costo: 200, stock_actual: 4,  stock_minimo: 5,  tipo: 'consignacion', estatus: 'activo',  colaborador_id: { nombre: 'Carmen V.' }, categoria_id: { nombre: 'Ropa'     } },
-  ],
-  ventas: [
-    { _id: 'v1', folio: 'VTA-000892', fecha: new Date('2026-03-15T14:30:00'), total: 380,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
-    { _id: 'v2', folio: 'VTA-000891', fecha: new Date('2026-03-15T12:10:00'), total: 120,  metodo_pago: 'transferencia', estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
-    { _id: 'v3', folio: 'VTA-000890', fecha: new Date('2026-03-14T17:45:00'), total: 450,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
-    { _id: 'v4', folio: 'VTA-000889', fecha: new Date('2026-03-14T11:20:00'), total: 840,  metodo_pago: 'tarjeta',       estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
-    { _id: 'v5', folio: 'VTA-000888', fecha: new Date('2026-03-13T16:00:00'), total: 475,  metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
-    { _id: 'v6', folio: 'VTA-000887', fecha: new Date('2026-03-13T10:30:00'), total: 1260, metodo_pago: 'efectivo',      estatus: 'completada', usuario_id: { nombre: 'Abril V.' } },
-  ],
-  contabilidad: [
-    { _id: 'm1', fecha: new Date('2026-03-15'), concepto: 'Venta VTA-000892', tipo: 'ingreso', categoria_contable: 'venta',             monto: 380,  saldo_resultante: 48320 },
-    { _id: 'm2', fecha: new Date('2026-03-15'), concepto: 'Pago Sofía Reyes', tipo: 'egreso',  categoria_contable: 'pago_colaborador',   monto: 2772, saldo_resultante: 45548 },
-    { _id: 'm3', fecha: new Date('2026-03-14'), concepto: 'Venta VTA-000890', tipo: 'ingreso', categoria_contable: 'venta',             monto: 4890, saldo_resultante: 48320 },
-    { _id: 'm4', fecha: new Date('2026-03-14'), concepto: 'Renta local marzo', tipo: 'egreso',  categoria_contable: 'renta',            monto: 5000, saldo_resultante: 43430 },
-    { _id: 'm5', fecha: new Date('2026-03-13'), concepto: 'Pago Lucía Martínez',tipo:'egreso',  categoria_contable: 'pago_colaborador', monto: 3374, saldo_resultante: 48430 },
-  ],
-  consignaciones: [
-    { _id: 'cs1', producto_id: { nombre: 'Aretes Dorados Luna'  }, colaborador_id: { nombre: 'Lucía Martínez' }, cantidad_ingresada: 24, cantidad_disponible: 18, cantidad_vendida: 6, fecha_ingreso: new Date('2026-03-01'), estatus: 'abierta' },
-    { _id: 'cs2', producto_id: { nombre: 'Bolso Tejido Boho'    }, colaborador_id: { nombre: 'Sofía Reyes'    }, cantidad_ingresada: 10, cantidad_disponible: 7,  cantidad_vendida: 3, fecha_ingreso: new Date('2026-03-05'), estatus: 'abierta' },
-    { _id: 'cs3', producto_id: { nombre: 'Pulseras Macramé'     }, colaborador_id: { nombre: 'Daniela Torres' }, cantidad_ingresada: 15, cantidad_disponible: 3,  cantidad_vendida: 12,fecha_ingreso: new Date('2026-03-08'), estatus: 'abierta' },
-    { _id: 'cs4', producto_id: { nombre: 'Diadema Flores Secas' }, colaborador_id: { nombre: 'María Carrillo' }, cantidad_ingresada: 12, cantidad_disponible: 9,  cantidad_vendida: 3, fecha_ingreso: new Date('2026-03-10'), estatus: 'abierta' },
-  ],
-  pagos: [
-    { _id: 'pg1', colaborador_id: { nombre: 'Lucía Martínez' }, periodo_inicio: new Date('2026-03-01'), periodo_fin: new Date('2026-03-15'), monto: 3374, metodo_pago: 'transferencia', estatus: 'pendiente', fecha_pago: null },
-    { _id: 'pg2', colaborador_id: { nombre: 'Sofía Reyes'    }, periodo_inicio: new Date('2026-03-01'), periodo_fin: new Date('2026-03-15'), monto: 2772, metodo_pago: 'transferencia', estatus: 'pagado',    fecha_pago: new Date('2026-03-15') },
-    { _id: 'pg3', colaborador_id: { nombre: 'María Carrillo' }, periodo_inicio: new Date('2026-03-01'), periodo_fin: new Date('2026-03-15'), monto: 1638, metodo_pago: 'efectivo',      estatus: 'pendiente', fecha_pago: null },
-    { _id: 'pg4', colaborador_id: { nombre: 'Daniela Torres' }, periodo_inicio: new Date('2026-03-01'), periodo_fin: new Date('2026-03-15'), monto: 1246, metodo_pago: 'transferencia', estatus: 'pendiente', fecha_pago: null },
-  ],
-};
-
 // ── Helpers ───────────────────────────────────────────────
 const fmt  = (n) => '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 });
 const fmtD = (d) => d ? new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -94,6 +19,7 @@ const initials = (n) => n ? n.split(' ').slice(0,2).map(w=>w[0]).join('').toUppe
 let toastTimer;
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
+  if (!el) return;
   el.textContent = msg;
   el.className   = `toast show ${type}`;
   clearTimeout(toastTimer);
@@ -106,8 +32,11 @@ async function handleLogin() {
   const pwd   = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
 
-  // Demo mode — accept any credentials or the demo ones
-  if (!email || !pwd) { errEl.textContent = 'Ingresa tu correo y contraseña.'; errEl.classList.remove('hidden'); return; }
+  if (!email || !pwd) { 
+    errEl.textContent = 'Ingresa tu correo y contraseña.'; 
+    errEl.classList.remove('hidden'); 
+    return; 
+  }
 
   errEl.classList.add('hidden');
   
@@ -119,18 +48,8 @@ async function handleLogin() {
     showApp();
   } catch (err) {
     console.error('Error de login:', err);
-    // Fallback a MOCK solo si son las cuentas demo o si no hay conexión
-    if (email === 'admin@aprilstore.mx' || email === 'cajera@aprilstore.mx' || email === 'demo') {
-      State.usuario = email === 'cajera@aprilstore.mx' 
-        ? { id: 'mock-c', nombre: 'Cajera Demo', rol: 'cajera' }
-        : MOCK.usuario;
-      State.token   = 'demo-token';
-      localStorage.setItem('april_token', State.token);
-      showApp();
-    } else {
-      errEl.textContent = err.message || 'Error al iniciar sesión. Verifica tus credenciales.';
-      errEl.classList.remove('hidden');
-    }
+    errEl.textContent = err.message || 'Error al iniciar sesión. Verifica tus credenciales.';
+    errEl.classList.remove('hidden');
   }
 }
 
@@ -326,67 +245,57 @@ function openPrimaryModal() {
 
 // ── DASHBOARD ─────────────────────────────────────────────
 async function loadDashboard() {
-  let d = MOCK.dashboard;
-  if (State.token && State.token !== 'demo-token') {
-    try { const r = await Api.dashboard(); d = r.data; } catch { /* demo */ }
+  const kpiRow = document.getElementById('kpi-row');
+  const barChart = document.getElementById('bar-chart');
+  const topColabs = document.getElementById('top-colabs-list');
+  
+  kpiRow.innerHTML = '<div class="loading-state">Cargando...</div>';
+
+  try {
+    const r = await Api.dashboard();
+    const d = r.data;
+
+    if (!d) throw new Error('No hay datos disponibles');
+
+    // KPI Cards
+    kpiRow.innerHTML = `
+      ${kpiCard('rose',
+        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+        'Ventas del mes', fmt(d.ventas_mes.total), `↑ ${d.ventas_mes.count} transacciones`, 'up')}
+      ${kpiCard('green',
+        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+        'Ventas de hoy', fmt(d.ventas_hoy.total), `${d.ventas_hoy.count} artículos vendidos`, '')}
+      ${kpiCard('amber',
+        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>`,
+        'Productos activos', d.productos_activos, `${d.alertas_stock} con stock bajo`, d.alertas_stock > 0 ? 'down' : '')}
+      ${kpiCard('blue',
+        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+        'Colaboradoras activas', d.colaboradores_activos, 'Consignatarias', '')}
+    `;
+
+    // Bar chart
+    const max = Math.max(...d.grafica_dias.map(x => x.total), 1);
+    barChart.innerHTML = d.grafica_dias.map((x, i) => `
+      <div class="bar-col">
+        <div class="bar-val">${i===d.grafica_dias.length-1?fmt(x.total):''}</div>
+        <div class="bar-fill${i===d.grafica_dias.length-1?' today':''}"
+             style="height:${Math.max(8, Math.round(x.total/max*80))}px"
+             title="${x._id}: ${fmt(x.total)}"></div>
+        <div class="bar-label">${x._id}</div>
+      </div>`).join('');
+
+    // Top colabs
+    topColabs.innerHTML = d.top_colaboradores.length ? d.top_colaboradores.map(c => `
+      <div class="colab-row">
+        <div class="colab-av">${initials(c.colaborador?.nombre)}</div>
+        <div><div class="colab-nm">${c.colaborador?.nombre || 'Desconocido'}</div><div class="colab-sub">${c.piezas} piezas</div></div>
+        <div class="colab-amt"><div class="colab-val">${fmt(c.total)}</div><div class="colab-pct">Comisión: ${fmt(c.comision)}</div></div>
+      </div>`).join('') : '<div class="empty-state">Sin actividad reciente</div>';
+
+  } catch (err) {
+    console.error('Error cargando dashboard:', err);
+    kpiRow.innerHTML = '<div class="error-state">Error al cargar datos</div>';
   }
-
-  // KPI Cards
-  document.getElementById('kpi-row').innerHTML = `
-    ${kpiCard('rose',
-      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
-      'Ventas del mes', fmt(d.ventas_mes.total), `↑ ${d.ventas_mes.count} transacciones`, 'up')}
-    ${kpiCard('green',
-      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-      'Ventas de hoy', fmt(d.ventas_hoy.total), `${d.ventas_hoy.count} artículos vendidos`, '')}
-    ${kpiCard('amber',
-      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>`,
-      'Productos activos', d.productos_activos, `${d.alertas_stock} con stock bajo`, d.alertas_stock > 0 ? 'down' : '')}
-    ${kpiCard('blue',
-      `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
-      'Colaboradoras activas', d.colaboradores_activos, 'Consignatarias', '')}
-  `;
-
-  // Bar chart
-  const max = Math.max(...d.grafica_dias.map(x => x.total));
-  document.getElementById('bar-chart').innerHTML = d.grafica_dias.map((x, i) => `
-    <div class="bar-col">
-      <div class="bar-val">${i===d.grafica_dias.length-1?fmt(x.total):''}</div>
-      <div class="bar-fill${i===d.grafica_dias.length-1?' today':''}"
-           style="height:${Math.max(8, Math.round(x.total/max*80))}px"
-           title="${x._id}: ${fmt(x.total)}"></div>
-      <div class="bar-label">${x._id}</div>
-    </div>`).join('');
-
-  // Top colabs
-  document.getElementById('top-colabs-list').innerHTML = d.top_colaboradores.map(c => `
-    <div class="colab-row">
-      <div class="colab-av">${initials(c.colaborador.nombre)}</div>
-      <div><div class="colab-nm">${c.colaborador.nombre}</div><div class="colab-sub">${c.piezas} piezas</div></div>
-      <div class="colab-amt"><div class="colab-val">${fmt(c.total)}</div><div class="colab-pct">Comisión: ${fmt(c.comision)}</div></div>
-    </div>`).join('');
-
-  // Activity
-  const acts = [
-    { dot: 'dot-rose',  text: 'Venta registrada: Aretes Dorados Luna × 2 — <strong>$380</strong>',    time: 'Hace 12 min' },
-    { dot: 'dot-green', text: 'Pago liquidado a Sofía Reyes — <strong>$2,772</strong>',                time: 'Hace 1 h'    },
-    { dot: 'dot-amber', text: 'Stock bajo: Pulseras Macramé — quedan <strong>3 piezas</strong>',       time: 'Hace 2 h'    },
-    { dot: 'dot-rose',  text: 'Nuevo ingreso consignación: María Carrillo — <strong>8 artículos</strong>', time: 'Ayer 16:30' },
-    { dot: 'dot-green', text: 'Corte de caja diario completado — <strong>$6,240</strong>',             time: 'Ayer 20:00'  },
-  ];
-  document.getElementById('activity-feed').innerHTML = acts.map(a => `
-    <div class="activity-item">
-      <div class="act-dot ${a.dot}"></div>
-      <div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>
-    </div>`).join('');
-
-  // Stock alerts
-  const alertItems = MOCK.productos.filter(p => p.stock_actual <= p.stock_minimo).slice(0, 5);
-  document.getElementById('stock-alerts').innerHTML = alertItems.length ? alertItems.map(p => `
-    <div class="alert-item">
-      <span class="alert-nm">${p.nombre}</span>
-      <span class="alert-stock ${p.stock_actual <= 3 ? 'stock-critical' : 'stock-low'}">${p.stock_actual} uds.</span>
-    </div>`).join('') : '<div class="empty-state" style="padding:20px"><p>Sin alertas de stock</p></div>';
 }
 
 function kpiCard(color, icon, label, value, delta, deltaClass) {
@@ -400,172 +309,233 @@ function kpiCard(color, icon, label, value, delta, deltaClass) {
 }
 
 // ── PRODUCTOS ─────────────────────────────────────────────
-function loadProductos() {
+async function loadProductos() {
   const tipo    = document.getElementById('filter-tipo')?.value || '';
   const estatus = document.getElementById('filter-estatus-prod')?.value || '';
-  let   data    = MOCK.productos;
+  const tbody   = document.getElementById('tbody-productos');
+  
+  tbody.innerHTML = '<tr><td colspan="8" class="loading-state">Cargando productos...</td></tr>';
 
-  // Solo intentar cargar de API si no estamos en demo mode
-  if (State.token && State.token !== 'demo-token') {
-    Api.productos(estatus).then(res => { if(res.data) { MOCK.productos = res.data; loadProductos(); } }).catch(()=>{});
+  try {
+    const res = await Api.productos(estatus);
+    let data = res.data || [];
+
+    State.cacheProductos = data; // Guardar en cache para POS y otros
+
+    if (tipo) data = data.filter(p => p.tipo === tipo);
+
+    document.getElementById('prod-count').textContent = `${data.length} productos`;
+
+    tbody.innerHTML = data.length ? data.map(p => {
+      const stockPct  = Math.min(100, Math.round(p.stock_actual / (p.stock_minimo * 3) * 100));
+      const stockColor= p.stock_actual <= 3 ? '#B84545' : p.stock_actual <= p.stock_minimo ? '#C47B2A' : '#4A8C6A';
+      return `<tr>
+        <td><div class="cell-primary">${p.nombre}</div><div class="cell-muted">${p.sku || '—'}</div></td>
+        <td>${p.categoria_id?.nombre || '—'}</td>
+        <td>${p.colaborador_id?.nombre || '<span class="badge badge-neutral">Tienda</span>'}</td>
+        <td class="cell-primary">${fmt(p.precio_venta)}</td>
+        <td>
+          <div class="stock-cell">
+            <span class="stock-num" style="color:${stockColor}">${p.stock_actual}</span>
+            <div class="progress"><div class="progress-bar-fill" style="width:${stockPct}%;background:${stockColor}"></div></div>
+          </div>
+        </td>
+        <td>${p.tipo === 'consignacion' ? '<span class="badge badge-rose">Consignación</span>' : '<span class="badge badge-neutral">Propio</span>'}</td>
+        <td>${estatusBadge(p.estatus)}</td>
+        <td>
+          <button class="row-action-btn" onclick="openProductoModal('${p._id}')" title="Editar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </td>
+      </tr>`;
+    }).join('') : emptyRow(8, 'Sin productos registrados');
+
+  } catch (err) {
+    console.error('Error cargando productos:', err);
+    tbody.innerHTML = '<tr><td colspan="8" class="error-state">Error al cargar productos</td></tr>';
   }
-
-  if (tipo)    data = data.filter(p => p.tipo    === tipo);
-  if (estatus) data = data.filter(p => p.estatus === estatus);
-
-  document.getElementById('prod-count').textContent = `${data.length} productos`;
-
-  document.getElementById('tbody-productos').innerHTML = data.length ? data.map(p => {
-    const stockPct  = Math.min(100, Math.round(p.stock_actual / (p.stock_minimo * 3) * 100));
-    const stockColor= p.stock_actual <= 3 ? '#B84545' : p.stock_actual <= p.stock_minimo ? '#C47B2A' : '#4A8C6A';
-    return `<tr>
-      <td><div class="cell-primary">${p.nombre}</div><div class="cell-muted">${p.sku || '—'}</div></td>
-      <td>${p.categoria_id?.nombre || '—'}</td>
-      <td>${p.colaborador_id?.nombre || '<span class="badge badge-neutral">Tienda</span>'}</td>
-      <td class="cell-primary">${fmt(p.precio_venta)}</td>
-      <td>
-        <div class="stock-cell">
-          <span class="stock-num" style="color:${stockColor}">${p.stock_actual}</span>
-          <div class="progress"><div class="progress-bar-fill" style="width:${stockPct}%;background:${stockColor}"></div></div>
-        </div>
-      </td>
-      <td>${p.tipo === 'consignacion' ? '<span class="badge badge-rose">Consignación</span>' : '<span class="badge badge-neutral">Propio</span>'}</td>
-      <td>${estatusBadge(p.estatus)}</td>
-      <td>
-        <button class="row-action-btn" onclick="openProductoModal('${p._id}')" title="Editar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </td>
-    </tr>`;
-  }).join('') : emptyRow(8, 'Sin productos registrados');
-
-  // Cache for venta modal
-  State.cacheProductos = MOCK.productos;
 }
 
 // ── COLABORADORES ─────────────────────────────────────────
-function loadColaboradores() {
+async function loadColaboradores() {
   const estatus = document.getElementById('filter-est-colab')?.value || 'activo';
-  let   data    = MOCK.colaboradores;
-  if (estatus) data = data.filter(c => c.estatus === estatus);
+  const grid = document.getElementById('colabs-grid');
+  grid.innerHTML = '<div class="loading-state">Cargando...</div>';
 
-  document.getElementById('colab-count').textContent = `${data.length} colaboradoras`;
-  document.getElementById('colabs-grid').innerHTML = data.map(c => `
-    <div class="colab-card" onclick="openColaboradorModal('${c._id}')">
-      <div class="colab-card-top">
-        <div class="colab-card-av">${initials(c.nombre)}</div>
-        <div>
-          <div class="colab-card-name">${c.nombre}</div>
-          <div class="colab-card-spec">${c.especialidad || '—'}</div>
+  try {
+    const res = await Api.get('/api/colaboradores' + (estatus ? `?estatus=${estatus}` : ''));
+    const data = res.data || [];
+
+    document.getElementById('colab-count').textContent = `${data.length} colaboradoras`;
+    grid.innerHTML = data.length ? data.map(c => `
+      <div class="colab-card" onclick="openColaboradorModal('${c._id}')">
+        <div class="colab-card-top">
+          <div class="colab-card-av">${initials(c.nombre)}</div>
+          <div>
+            <div class="colab-card-name">${c.nombre}</div>
+            <div class="colab-card-spec">${c.especialidad || '—'}</div>
+          </div>
         </div>
-      </div>
-      <div class="colab-card-stats">
-        <div><div class="colab-stat-val">${fmt(c.ventas_mes || 0)}</div><div class="colab-stat-lbl">Ventas mes</div></div>
-        <div><div class="colab-stat-val">${c.piezas || 0}</div><div class="colab-stat-lbl">Piezas</div></div>
-      </div>
-      <div class="colab-card-footer">
-        <span class="colab-comision">Comisión: <strong>${c.porcentaje_comision}%</strong></span>
-        ${estatusBadge(c.estatus)}
-      </div>
-    </div>`).join('');
+        <div class="colab-card-stats">
+          <div><div class="colab-stat-val">${fmt(c.ventas_mes || 0)}</div><div class="colab-stat-lbl">Ventas mes</div></div>
+          <div><div class="colab-stat-val">${c.piezas || 0}</div><div class="colab-stat-lbl">Piezas</div></div>
+        </div>
+        <div class="colab-card-footer">
+          <span class="colab-comision">Comisión: <strong>${c.porcentaje_comision}%</strong></span>
+          ${estatusBadge(c.estatus)}
+        </div>
+      </div>`).join('') : '<div class="empty-state">Sin colaboradoras registradas</div>';
+  } catch (err) {
+    console.error('Error cargando colaboradoras:', err);
+    grid.innerHTML = '<div class="error-state">Error al cargar datos</div>';
+  }
 }
 
 // ── VENTAS ────────────────────────────────────────────────
-function loadVentas() {
-  let data = MOCK.ventas;
+async function loadVentas() {
   const metodo = document.getElementById('filter-metodo')?.value;
-  if (metodo) data = data.filter(v => v.metodo_pago === metodo);
+  const tbody = document.getElementById('tbody-ventas');
+  tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Cargando...</td></tr>';
 
-  document.getElementById('ventas-count').textContent = `${data.length} ventas`;
-  document.getElementById('tbody-ventas').innerHTML = data.length ? data.map(v => `
-    <tr>
-      <td class="cell-primary">${v.folio}</td>
-      <td>${fmtDT(v.fecha)}</td>
-      <td>—</td>
-      <td class="cell-primary">${fmt(v.total)}</td>
-      <td>${metodoBadge(v.metodo_pago)}</td>
-      <td>${estatusBadge(v.estatus)}</td>
-      <td>
-        <button class="row-action-btn" onclick="openDetalleVenta('${v._id}')" title="Ver detalle">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </td>
-    </tr>`).join('') : emptyRow(7, 'Sin ventas registradas');
+  try {
+    const res = await Api.get('/api/ventas' + (metodo ? `?metodo=${metodo}` : ''));
+    const data = res.data || [];
+
+    document.getElementById('ventas-count').textContent = `${data.length} ventas`;
+    tbody.innerHTML = data.length ? data.map(v => `
+      <tr>
+        <td class="cell-primary">${v.folio}</td>
+        <td>${fmtDT(v.fecha)}</td>
+        <td>${v.usuario_id?.nombre || '—'}</td>
+        <td class="cell-primary">${fmt(v.total)}</td>
+        <td>${metodoBadge(v.metodo_pago)}</td>
+        <td>${estatusBadge(v.estatus)}</td>
+        <td>
+          <button class="row-action-btn" onclick="openDetalleVenta('${v._id}')" title="Ver detalle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </td>
+      </tr>`).join('') : emptyRow(7, 'Sin ventas registradas');
+  } catch (err) {
+    console.error('Error cargando ventas:', err);
+    tbody.innerHTML = '<tr><td colspan="7" class="error-state">Error al cargar datos</td></tr>';
+  }
 }
 
 // ── CONTABILIDAD ──────────────────────────────────────────
-function loadContabilidad() {
+async function loadContabilidad() {
   const tipo = document.getElementById('filter-tipo-ct')?.value;
-  let   data = MOCK.contabilidad;
-  if (tipo) data = data.filter(m => m.tipo === tipo);
+  const tbody = document.getElementById('tbody-contabilidad');
+  const kpis = document.getElementById('contab-kpis');
+  
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-state">Cargando...</td></tr>';
 
-  // KPIs
-  const ingresos = MOCK.contabilidad.filter(m=>m.tipo==='ingreso').reduce((a,m)=>a+m.monto,0);
-  const egresos  = MOCK.contabilidad.filter(m=>m.tipo==='egreso' ).reduce((a,m)=>a+m.monto,0);
-  document.getElementById('contab-kpis').innerHTML = `
-    ${kpiCard('rose',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>', 'Ingresos del mes', fmt(ingresos), '↑ vs mes anterior', 'up')}
-    ${kpiCard('green', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>','Egresos del mes', fmt(egresos), 'Incluye pagos y gastos', '')}
-    ${kpiCard('amber', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', 'Balance neto', fmt(ingresos - egresos), 'Ganancia del período', ingresos > egresos ? 'up' : 'down')}
-    ${kpiCard('blue',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', 'Movimientos', data.length, 'En este período', '')}
-  `;
+  try {
+    const res = await Api.get('/api/contabilidad' + (tipo ? `?tipo=${tipo}` : ''));
+    const data = res.data || [];
 
-  document.getElementById('tbody-contabilidad').innerHTML = data.length ? data.map(m => `
-    <tr>
-      <td>${fmtD(m.fecha)}</td>
-      <td class="cell-primary">${m.concepto}</td>
-      <td><span class="badge badge-neutral">${m.categoria_contable.replace('_',' ')}</span></td>
-      <td>${m.tipo === 'ingreso' ? '<span class="badge badge-success">Ingreso</span>' : '<span class="badge badge-danger">Egreso</span>'}</td>
-      <td class="cell-primary" style="color:${m.tipo==='ingreso'?'var(--success)':'var(--danger)'}">${m.tipo==='ingreso'?'+':'−'}${fmt(m.monto)}</td>
-    </tr>`).join('') : emptyRow(5, 'Sin movimientos');
+    // KPIs simplificados basados en la data cargada (en un sistema real el API daría estos agregados)
+    const ingresos = data.filter(m=>m.tipo==='ingreso').reduce((a,m)=>a+m.monto,0);
+    const egresos  = data.filter(m=>m.tipo==='egreso' ).reduce((a,m)=>a+m.monto,0);
+    
+    kpis.innerHTML = `
+      ${kpiCard('rose',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>', 'Ingresos', fmt(ingresos), 'Período actual', 'up')}
+      ${kpiCard('green', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>','Egresos', fmt(egresos), 'Incluye pagos y gastos', '')}
+      ${kpiCard('amber', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', 'Balance', fmt(ingresos - egresos), 'Neto', ingresos > egresos ? 'up' : 'down')}
+      ${kpiCard('blue',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', 'Movimientos', data.length, 'Registrados', '')}
+    `;
+
+    tbody.innerHTML = data.length ? data.map(m => `
+      <tr>
+        <td>${fmtD(m.fecha)}</td>
+        <td class="cell-primary">${m.concepto}</td>
+        <td><span class="badge badge-neutral">${m.categoria_contable?.replace('_',' ') || 'otro'}</span></td>
+        <td>${m.tipo === 'ingreso' ? '<span class="badge badge-success">Ingreso</span>' : '<span class="badge badge-danger">Egreso</span>'}</td>
+        <td class="cell-primary" style="color:${m.tipo==='ingreso'?'var(--success)':'var(--danger)'}">${m.tipo==='ingreso'?'+':'−'}${fmt(m.monto)}</td>
+      </tr>`).join('') : emptyRow(5, 'Sin movimientos');
+  } catch (err) {
+    console.error('Error cargando contabilidad:', err);
+    tbody.innerHTML = '<tr><td colspan="5" class="error-state">Error al cargar datos</td></tr>';
+  }
 }
 
 // ── CONSIGNACIONES ────────────────────────────────────────
-function loadConsignaciones() {
-  const data = MOCK.consignaciones;
-  document.getElementById('tbody-consig').innerHTML = data.length ? data.map(c => `
-    <tr>
-      <td class="cell-primary">${c.producto_id?.nombre || '—'}</td>
-      <td>${c.colaborador_id?.nombre || '—'}</td>
-      <td>${c.cantidad_ingresada}</td>
-      <td><strong>${c.cantidad_disponible}</strong></td>
-      <td>${c.cantidad_vendida}</td>
-      <td>${estatusBadge(c.estatus)}</td>
-      <td>${fmtD(c.fecha_ingreso)}</td>
-    </tr>`).join('') : emptyRow(7, 'Sin consignaciones activas');
+async function loadConsignaciones() {
+  const tbody = document.getElementById('tbody-consig');
+  tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Cargando...</td></tr>';
+
+  try {
+    const res = await Api.get('/api/consignaciones');
+    const data = res.data || [];
+
+    tbody.innerHTML = data.length ? data.map(c => `
+      <tr>
+        <td class="cell-primary">${c.producto_id?.nombre || '—'}</td>
+        <td>${c.colaborador_id?.nombre || '—'}</td>
+        <td>${c.cantidad_ingresada}</td>
+        <td><strong>${c.cantidad_disponible}</strong></td>
+        <td>${c.cantidad_vendida}</td>
+        <td>${estatusBadge(c.estatus)}</td>
+        <td>${fmtD(c.fecha_ingreso)}</td>
+      </tr>`).join('') : emptyRow(7, 'Sin consignaciones activas');
+  } catch (err) {
+    console.error('Error cargando consignaciones:', err);
+    tbody.innerHTML = '<tr><td colspan="7" class="error-state">Error al cargar datos</td></tr>';
+  }
 }
 
 // ── PAGOS ─────────────────────────────────────────────────
-function loadPagos() {
-  const data = MOCK.pagos;
-  document.getElementById('tbody-pagos').innerHTML = data.length ? data.map(p => `
-    <tr>
-      <td class="cell-primary">${p.colaborador_id?.nombre || '—'}</td>
-      <td>${fmtD(p.periodo_inicio)} – ${fmtD(p.periodo_fin)}</td>
-      <td class="cell-primary">${fmt(p.monto)}</td>
-      <td>${metodoBadge(p.metodo_pago)}</td>
-      <td>${estatusBadge(p.estatus)}</td>
-      <td>${p.fecha_pago ? fmtD(p.fecha_pago) : '—'}</td>
-      <td>${p.estatus === 'pendiente' ?
-        `<button class="btn-sm-outline" onclick="liquidarPago('${p._id}')">Liquidar</button>` :
-        `<span class="badge badge-success">✓ Pagado</span>`}
-      </td>
-    </tr>`).join('') : emptyRow(7, 'Sin pagos registrados');
+async function loadPagos() {
+  const tbody = document.getElementById('tbody-pagos');
+  tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Cargando...</td></tr>';
+
+  try {
+    const res = await Api.get('/api/pagos');
+    const data = res.data || [];
+
+    tbody.innerHTML = data.length ? data.map(p => `
+      <tr>
+        <td class="cell-primary">${p.colaborador_id?.nombre || '—'}</td>
+        <td>${fmtD(p.periodo_inicio)} – ${fmtD(p.periodo_fin)}</td>
+        <td class="cell-primary">${fmt(p.monto)}</td>
+        <td>${metodoBadge(p.metodo_pago)}</td>
+        <td>${estatusBadge(p.estatus)}</td>
+        <td>${p.fecha_pago ? fmtD(p.fecha_pago) : '—'}</td>
+        <td>${p.estatus === 'pendiente' ?
+          `<button class="btn-sm-outline" onclick="liquidarPago('${p._id}')">Liquidar</button>` :
+          `<span class="badge badge-success">✓ Pagado</span>`}
+        </td>
+      </tr>`).join('') : emptyRow(7, 'Sin pagos registrados');
+  } catch (err) {
+    console.error('Error cargando pagos:', err);
+    tbody.innerHTML = '<tr><td colspan="7" class="error-state">Error al cargar datos</td></tr>';
+  }
 }
 
 // ── CATEGORIAS ────────────────────────────────────────────
-function loadCategorias() {
-  const data = MOCK.categorias;
-  document.getElementById('tbody-cats').innerHTML = data.map(c => `
-    <tr>
-      <td class="cell-primary">${c.nombre}</td>
-      <td>${c.descripcion || '—'}</td>
-      <td>${c.activa ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-neutral">Inactiva</span>'}</td>
-      <td>
-        <button class="row-action-btn" title="Editar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </td>
-    </tr>`).join('');
+async function loadCategorias() {
+  const tbody = document.getElementById('tbody-cats');
+  tbody.innerHTML = '<tr><td colspan="4" class="loading-state">Cargando...</td></tr>';
+
+  try {
+    const res = await Api.get('/api/categorias');
+    const data = res.data || [];
+
+    tbody.innerHTML = data.length ? data.map(c => `
+      <tr>
+        <td class="cell-primary">${c.nombre}</td>
+        <td>${c.descripcion || '—'}</td>
+        <td>${c.activa ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-neutral">Inactiva</span>'}</td>
+        <td>
+          <button class="row-action-btn" title="Editar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="4" class="empty-state">Sin categorías</td></tr>';
+  } catch (err) {
+    console.error('Error cargando categorías:', err);
+    tbody.innerHTML = '<tr><td colspan="4" class="error-state">Error al cargar datos</td></tr>';
+  }
 }
 
 // ── MODALS ────────────────────────────────────────────────
@@ -592,7 +562,9 @@ function openVentaModal() {
 function searchProductosVenta(q) {
   const res = document.getElementById('prod-results');
   if (!q.trim()) { res.classList.remove('open'); return; }
-  const matches = MOCK.productos.filter(p =>
+  
+  // Usar el cache cargado en loadProductos()
+  const matches = State.cacheProductos.filter(p =>
     p.nombre.toLowerCase().includes(q.toLowerCase()) ||
     (p.sku && p.sku.toLowerCase().includes(q.toLowerCase()))
   ).slice(0, 6);
