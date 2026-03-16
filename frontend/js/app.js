@@ -137,10 +137,15 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
 
   const u = State.usuario;
-  document.getElementById('user-name').textContent     = u.nombre;
-  document.getElementById('user-role').textContent     = u.rol === 'admin' ? 'Administradora' : 'Cajera';
-  document.getElementById('user-initials').textContent = initials(u.nombre);
+  if (u) {
+    document.getElementById('user-name').textContent     = u.nombre;
+    document.getElementById('user-role').textContent     = u.rol === 'admin' ? 'Administradora' : 'Cajera';
+    document.getElementById('user-initials').textContent = initials(u.nombre);
+  }
 
+  // Asegurar que estamos en el dashboard al entrar
+  navigate('dashboard');
+  
   loadDashboard();
   checkStockAlerts();
 }
@@ -836,8 +841,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check token
   const token = localStorage.getItem('april_token');
   if (token) {
-    State.token   = token;
+    State.token = token;
+    // Quick local fallback
     State.usuario = MOCK.usuario;
     showApp();
+
+    // Try to get real user from API
+    Api.me()
+      .then(res => {
+        if (res.success && res.usuario) {
+          State.usuario = res.usuario;
+          showApp(); // Re-render with real data
+        }
+      })
+      .catch(err => {
+        console.warn('No se pudo validar la sesión:', err);
+        if (err.status === 401) handleLogout();
+      });
   }
 });
