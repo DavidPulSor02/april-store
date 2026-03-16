@@ -110,19 +110,28 @@ async function handleLogin() {
   if (!email || !pwd) { errEl.textContent = 'Ingresa tu correo y contraseña.'; errEl.classList.remove('hidden'); return; }
 
   errEl.classList.add('hidden');
-  State.usuario = MOCK.usuario;
-  State.token   = 'demo-token';
-  localStorage.setItem('april_token', State.token);
-
-  // Try real API, fallback to mock
+  
   try {
     const res = await Api.login(email, pwd);
     State.usuario = res.usuario;
     State.token   = res.token;
     localStorage.setItem('april_token', res.token);
-  } catch { /* demo mode */ }
-
-  showApp();
+    showApp();
+  } catch (err) {
+    console.error('Error de login:', err);
+    // Fallback a MOCK solo si son las cuentas demo o si no hay conexión
+    if (email === 'admin@aprilstore.mx' || email === 'cajera@aprilstore.mx' || email === 'demo') {
+      State.usuario = email === 'cajera@aprilstore.mx' 
+        ? { id: 'mock-c', nombre: 'Cajera Demo', rol: 'cajera' }
+        : MOCK.usuario;
+      State.token   = 'demo-token';
+      localStorage.setItem('april_token', State.token);
+      showApp();
+    } else {
+      errEl.textContent = err.message || 'Error al iniciar sesión. Verifica tus credenciales.';
+      errEl.classList.remove('hidden');
+    }
+  }
 }
 
 function toggleLoginPassword() {
