@@ -205,7 +205,9 @@ function openPrimaryModal() {
 // ── DASHBOARD ─────────────────────────────────────────────
 async function loadDashboard() {
   let d = MOCK.dashboard;
-  try { const r = await Api.dashboard(); d = r.data; } catch { /* demo */ }
+  if (State.token && State.token !== 'demo-token') {
+    try { const r = await Api.dashboard(); d = r.data; } catch { /* demo */ }
+  }
 
   // KPI Cards
   document.getElementById('kpi-row').innerHTML = `
@@ -280,6 +282,12 @@ function loadProductos() {
   const tipo    = document.getElementById('filter-tipo')?.value || '';
   const estatus = document.getElementById('filter-estatus-prod')?.value || '';
   let   data    = MOCK.productos;
+
+  // Solo intentar cargar de API si no estamos en demo mode
+  if (State.token && State.token !== 'demo-token') {
+    Api.productos(estatus).then(res => { if(res.data) { MOCK.productos = res.data; loadProductos(); } }).catch(()=>{});
+  }
+
   if (tipo)    data = data.filter(p => p.tipo    === tipo);
   if (estatus) data = data.filter(p => p.estatus === estatus);
 
@@ -842,21 +850,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const token = localStorage.getItem('april_token');
   if (token) {
     State.token = token;
-    // Quick local fallback
     State.usuario = MOCK.usuario;
     showApp();
 
-    // Try to get real user from API
-    Api.me()
-      .then(res => {
-        if (res.success && res.usuario) {
-          State.usuario = res.usuario;
-          showApp(); // Re-render with real data
-        }
-      })
-      .catch(err => {
-        console.warn('No se pudo validar la sesión:', err);
-        if (err.status === 401) handleLogout();
-      });
+    // Only try to get real user if it's NOT a demo token
+    if (token !== 'demo-token') {
+      Api.me()
+        .then(res => {
+          if (res.success && res.usuario) {
+            State.usuario = res.usuario;
+            showApp(); // Re-render with real data
+          }
+        })
+        .catch(err => {
+          console.warn('Sesión inválida o expirada:', err);
+          if (err.status === 401) handleLogout();
+        });
+    }
   }
 });
