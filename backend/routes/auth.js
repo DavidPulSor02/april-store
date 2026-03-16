@@ -15,16 +15,26 @@ router.post('/login',
   body('email').isEmail(),
   body('password').notEmpty(),
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty())
-      return res.status(400).json({ success: false, errors: errors.array() });
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty())
+        return res.status(400).json({ success: false, errors: errors.array() });
 
-    const { email, password } = req.body;
-    const usuario = await Usuario.findOne({ email, activo: true });
-    if (!usuario || !(await usuario.compararPassword(password)))
-      return res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+      const { email, password } = req.body;
+      const usuario = await Usuario.findOne({ email, activo: true });
+      
+      if (!usuario || !(await usuario.compararPassword(password)))
+        return res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
 
-    res.json({ success: true, token: sign(usuario), usuario: { id: usuario._id, nombre: usuario.nombre, rol: usuario.rol } });
+      res.json({ 
+        success: true, 
+        token: sign(usuario), 
+        usuario: { id: usuario._id, nombre: usuario.nombre, rol: usuario.rol } 
+      });
+    } catch (err) {
+      console.error('Error en /api/auth/login:', err);
+      res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    }
   }
 );
 

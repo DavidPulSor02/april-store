@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const auth   = require('../middleware/auth');
-const { Caja } = require('../models');
+const { Caja, Usuario } = require('../models');
+const { enviarReporteCaja } = require('../services/emailService');
 
 // GET /api/caja/estado - Ver si hay caja abierta para el usuario actual
 router.get('/estado', auth, async (req, res) => {
@@ -46,6 +47,13 @@ router.post('/cerrar', auth, async (req, res) => {
     caja.estatus = 'cerrada';
     
     await caja.save();
+
+    // Enviar reporte por correo (sin bloquear la respuesta)
+    const user = await Usuario.findById(req.usuario.id);
+    enviarReporteCaja({
+      usuario: user?.nombre || 'Desconocido',
+      ...caja.toObject()
+    }).catch(e => console.error('Error enviando reporte:', e));
 
     res.json({ success: true, caja });
   } catch (err) {
