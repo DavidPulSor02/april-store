@@ -131,6 +131,15 @@ body {
 }
 .login-hint { text-align: center; font-size: 12px; color: var(--ink-muted); margin-top: 16px; }
 .full-width { width: 100%; justify-content: center; }
+.input-action-wrap { display: flex; align-items: center; }
+.icon-btn-abs {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--ink-muted);
+  cursor: pointer; display: flex; align-items: center;
+  padding: 4px; border-radius: 4px; transition: var(--transition);
+}
+.icon-btn-abs:hover { color: var(--rose); background: var(--rose-pale); }
+.icon-btn-abs svg { display: block; }
 
 /* ════════════════════════════════════════════════════════
    APP SHELL

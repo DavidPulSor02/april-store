@@ -25,7 +25,12 @@
     </div>
     <div class="form-field">
       <label>Contraseña</label>
-      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="input-action-wrap" style="position: relative;">
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" class="full-width"/>
+        <button type="button" id="toggle-password" class="icon-btn-abs" onclick="toggleLoginPassword()">
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div id="login-error" class="login-error hidden"></div>
     <button class="btn-primary full-width" onclick="handleLogin()">
