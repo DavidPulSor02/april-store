@@ -582,13 +582,15 @@ function searchProductosVenta(q) {
 }
 
 function addVentaItem(prodId) {
-  const p = MOCK.productos.find(x => x._id === prodId);
+  const p = State.cacheProductos.find(x => x._id === prodId);
   if (!p) return;
   document.getElementById('prod-search').value = '';
   document.getElementById('prod-results').classList.remove('open');
 
   const existing = State.ventaItems.find(i => i._id === prodId);
-  if (existing) { if (existing.qty < p.stock_actual) existing.qty++; }
+  if (existing) { 
+    if (existing.qty < (p.stock_actual || 0)) existing.qty++; 
+  }
   else State.ventaItems.push({ ...p, qty: 1 });
   renderVentaItems();
 }
@@ -642,23 +644,24 @@ async function submitVenta() {
   const metodo = document.querySelector('input[name="metodo_pago"]:checked')?.value || 'efectivo';
   const desc   = parseFloat(document.getElementById('v-descuento').value || 0);
 
-  // Mock — agregar a la lista
-  const folio = `VTA-${String(MOCK.ventas.length + 893).padStart(6,'0')}`;
-  const sub   = State.ventaItems.reduce((a,i)=>a+i.precio_venta*i.qty,0);
-  MOCK.ventas.unshift({ _id: `v_${Date.now()}`, folio, fecha: new Date(), total: sub-desc, metodo_pago: metodo, estatus: 'completada', usuario_id: { nombre: State.usuario.nombre } });
-
-  // Try real API
+  // Real — enviamos al servidor
   try {
-    await Api.crearVenta({
+    const res = await Api.post('/api/ventas', {
       items: State.ventaItems.map(i => ({ producto_id: i._id, cantidad: i.qty })),
-      metodo_pago: metodo, descuento: desc,
+      metodo_pago: metodo,
+      descuento: desc
     });
-  } catch { /* demo */ }
-
-  closeAllModals();
-  toast(`Venta ${folio} registrada exitosamente`, 'success');
-  State.ventaItems = [];
-  if (document.getElementById('page-ventas').classList.contains('active')) loadVentas();
+    
+    if (res.success) {
+      toast('Venta registrada exitosamente', 'success');
+      State.ventaItems = [];
+      closeAllModals();
+      if (document.getElementById('page-ventas').classList.contains('active')) loadVentas();
+    }
+  } catch (err) {
+    console.error('Error en venta:', err);
+    toast('Error al registrar venta', 'error');
+  }
 }
 
 // Producto modal
@@ -667,13 +670,13 @@ async function openProductoModal(id) {
   document.getElementById('modal-prod-title').textContent = id ? 'Editar producto' : 'Nuevo producto';
 
   // Load categorias & colaboradores for selects
-  const cats  = MOCK.categorias;
-  const colabs= MOCK.colaboradores;
+  const cats  = State.cacheCategorias;
+  const colabs= State.cacheColaboradores;
   document.getElementById('prod-categoria').innerHTML   = cats.map(c => `<option value="${c._id}">${c.nombre}</option>`).join('');
   document.getElementById('prod-colaborador').innerHTML = `<option value="">— Tienda propia —</option>` + colabs.map(c => `<option value="${c._id}">${c.nombre}</option>`).join('');
 
   if (id) {
-    const p = MOCK.productos.find(x => x._id === id);
+    const p = State.cacheProductos.find(x => x._id === id);
     if (p) {
       document.getElementById('prod-nombre').value     = p.nombre;
       document.getElementById('prod-sku').value        = p.sku || '';
@@ -705,7 +708,7 @@ function openColaboradorModal(id) {
   document.getElementById('colab-id').value = id || '';
   document.getElementById('modal-colab-title').textContent = id ? 'Editar colaboradora' : 'Nueva colaboradora';
   if (id) {
-    const c = MOCK.colaboradores.find(x => x._id === id);
+    const c = State.cacheColaboradores.find(x => x._id === id);
     if (c) {
       document.getElementById('colab-nombre').value     = c.nombre;
       document.getElementById('colab-especialidad').value = c.especialidad || '';
@@ -744,7 +747,7 @@ async function submitMovimiento() {
 
 // Detalle venta
 function openDetalleVenta(id) {
-  const v = MOCK.ventas.find(x => x._id === id);
+  const v = (State.cacheVentas || []).find(x => x._id === id);
   if (!v) return;
   document.getElementById('dv-folio').textContent = v.folio;
   document.getElementById('dv-fecha').textContent = fmtDT(v.fecha);
@@ -760,16 +763,20 @@ function openDetalleVenta(id) {
 }
 
 // Liquidar pago
-function liquidarPago(id) {
-  const p = MOCK.pagos.find(x => x._id === id);
-  if (p) { p.estatus = 'pagado'; p.fecha_pago = new Date(); }
-  toast('Pago liquidado correctamente', 'success');
-  loadPagos();
+async function liquidarPago(id) {
+  try {
+    await Api.post(`/api/pagos/${id}/liquidar`);
+    toast('Pago liquidado correctamente', 'success');
+    loadPagos();
+  } catch (err) {
+    console.error('Error liquidando pago:', err);
+    toast('Error al liquidar pago', 'error');
+  }
 }
 
 // ── STOCK ALERTS ─────────────────────────────────────────
 async function checkStockAlerts() {
-  const bajos = MOCK.productos.filter(p => p.stock_actual <= p.stock_minimo);
+  const bajos = (State.cacheProductos || []).filter(p => p.stock_actual <= p.stock_minimo);
   if (bajos.length > 0) document.getElementById('badge-dot').classList.add('visible');
 }
 
@@ -791,7 +798,7 @@ function openConsignacionModal() {
   // Poblar colaboradoras
   const sel = document.getElementById('consig-colaborador');
   sel.innerHTML = '<option value="">Seleccionar…</option>' +
-    MOCK.colaboradores.map(c => `<option value="${c._id}">${c.nombre}</option>`).join('');
+    State.cacheColaboradores.map(c => `<option value="${c._id}">${c.nombre}</option>`).join('');
   document.getElementById('consig-producto').innerHTML  = '<option value="">Primero selecciona colaboradora</option>';
   document.getElementById('consig-cantidad').value      = '';
   document.getElementById('consig-notas').value         = '';
@@ -805,14 +812,14 @@ function loadProductosDeColab() {
   const sel     = document.getElementById('consig-producto');
   if (!colabId) { sel.innerHTML = '<option value="">Primero selecciona colaboradora</option>'; return; }
 
-  const prods = MOCK.productos.filter(p => p.colaborador_id?._id === colabId || p.colaborador_id === colabId);
+  const prods = (State.cacheProductos || []).filter(p => p.colaborador_id?._id === colabId || p.colaborador_id === colabId);
   sel.innerHTML = '<option value="">Seleccionar producto…</option>' +
     prods.map(p => `<option value="${p._id}" data-precio="${p.precio_venta}">${p.nombre} — ${fmt(p.precio_venta)}</option>`).join('');
 
   sel.onchange = () => {
     const opt   = sel.selectedOptions[0];
     const colabId = document.getElementById('consig-colaborador').value;
-    const colab   = MOCK.colaboradores.find(c => c._id === colabId);
+    const colab   = State.cacheColaboradores.find(c => c._id === colabId);
     if (!opt?.value || !colab) { document.getElementById('consig-preview').classList.add('hidden'); return; }
     const precio  = parseFloat(opt.dataset.precio || 0);
     const comPct  = colab.porcentaje_comision;
@@ -829,35 +836,31 @@ async function submitConsignacion() {
   const cantidad = parseInt(document.getElementById('consig-cantidad').value);
   if (!colabId || !prodId || !cantidad) { toast('Completa todos los campos obligatorios', 'error'); return; }
 
-  const colab   = MOCK.colaboradores.find(c => c._id === colabId);
-  const prod    = MOCK.productos.find(p => p._id === prodId);
+  const colab   = State.cacheColaboradores.find(c => c._id === colabId);
+  const prod    = State.cacheProductos.find(p => p._id === prodId);
 
-  // Actualizar mock
-  prod.stock_actual += cantidad;
-  MOCK.consignaciones.unshift({
-    _id: `cs_${Date.now()}`,
-    colaborador_id: { nombre: colab.nombre },
-    producto_id:    { nombre: prod.nombre  },
-    cantidad_ingresada:  cantidad,
-    cantidad_disponible: cantidad,
-    cantidad_vendida: 0,
-    fecha_ingreso: new Date(),
-    estatus: 'abierta',
-  });
-
-  // Try real API
-  try { await Api.crearConsignacion({ colaborador_id: colabId, producto_id: prodId, cantidad_ingresada: cantidad, fecha_ingreso: new Date() }); } catch { /* demo */ }
-
-  closeAllModals();
-  toast(`Entrada registrada: ${cantidad} piezas de ${prod.nombre}`, 'success');
-  loadConsignaciones();
+  // Real API
+  try { 
+    await Api.post('/api/consignaciones', {
+      colaborador_id: colabId,
+      producto_id: prodId,
+      cantidad_ingresada: cantidad,
+      fecha_ingreso: new Date()
+    });
+    closeAllModals();
+    toast(`Entrada registrada: ${cantidad} piezas de ${prod.nombre}`, 'success');
+    loadConsignaciones();
+  } catch (err) {
+    console.error('Error en consignación:', err);
+    toast('Error al registrar consignación', 'error');
+  }
 }
 
 // ── PAGOS MODAL ───────────────────────────────────────────
 function openPagoModal() {
   const sel = document.getElementById('pago-colaborador');
   sel.innerHTML = '<option value="">Seleccionar…</option>' +
-    MOCK.colaboradores.map(c => `<option value="${c._id}" data-ventas="${c.ventas_mes||0}" data-pct="${c.porcentaje_comision}">${c.nombre}</option>`).join('');
+    State.cacheColaboradores.map(c => `<option value="${c._id}" data-ventas="${c.ventas_mes||0}" data-pct="${c.porcentaje_comision}">${c.nombre}</option>`).join('');
 
   document.getElementById('pago-monto').value     = '';
   document.getElementById('pago-referencia').value = '';
@@ -890,20 +893,23 @@ async function submitPago() {
   const metodo  = document.getElementById('pago-metodo').value;
   if (!colabId || !monto) { toast('Selecciona colaboradora y monto', 'error'); return; }
 
-  const colab = MOCK.colaboradores.find(c => c._id === colabId);
-  MOCK.pagos.unshift({
-    _id: `pg_${Date.now()}`,
-    colaborador_id: { nombre: colab.nombre },
-    periodo_inicio: new Date(document.getElementById('pago-inicio').value),
-    periodo_fin:    new Date(document.getElementById('pago-fin').value),
-    monto, metodo_pago: metodo, estatus: 'pendiente', fecha_pago: null,
-  });
+  const colab = State.cacheColaboradores.find(c => c._id === colabId);
 
-  try { await Api.crearPago({ colaborador_id: colabId, monto, metodo_pago: metodo, periodo_inicio: document.getElementById('pago-inicio').value, periodo_fin: document.getElementById('pago-fin').value }); } catch { /* demo */ }
-
-  closeAllModals();
-  toast(`Pago de ${fmt(monto)} registrado para ${colab.nombre}`, 'success');
-  loadPagos();
+  try { 
+    await Api.post('/api/pagos', { 
+      colaborador_id: colabId, 
+      monto, 
+      metodo_pago: metodo, 
+      periodo_inicio: document.getElementById('pago-inicio').value, 
+      periodo_fin: document.getElementById('pago-fin').value 
+    }); 
+    closeAllModals();
+    toast(`Pago de ${fmt(monto)} registrado para ${colab.nombre}`, 'success');
+    loadPagos();
+  } catch (err) {
+    console.error('Error enviando pago:', err);
+    toast('Error al registrar pago', 'error');
+  }
 }
 
 // ── CATEGORÍA MODAL ───────────────────────────────────────
@@ -916,7 +922,6 @@ function openCategoriaModal() {
 async function submitCategoria() {
   const nombre = document.getElementById('cat-nombre').value.trim();
   if (!nombre) { toast('El nombre de categoría es obligatorio', 'error'); return; }
-  MOCK.categorias.push({ _id: `cat_${Date.now()}`, nombre, descripcion: document.getElementById('cat-desc').value, activa: true });
   try { await Api.crearCategoria({ nombre, descripcion: document.getElementById('cat-desc').value }); } catch { /* demo */ }
   closeAllModals();
   toast(`Categoría "${nombre}" creada`, 'success');
@@ -944,22 +949,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const token = localStorage.getItem('april_token');
   if (token) {
     State.token = token;
-    State.usuario = MOCK.usuario;
-    showApp();
-
-    // Only try to get real user if it's NOT a demo token
-    if (token !== 'demo-token') {
-      Api.me()
-        .then(res => {
-          if (res.success && res.usuario) {
-            State.usuario = res.usuario;
-            showApp(); // Re-render with real data
-          }
-        })
-        .catch(err => {
-          console.warn('Sesión inválida o expirada:', err);
-          if (err.status === 401) handleLogout();
-        });
-    }
+    
+    // Mostramos un loader o algo similar si fuera necesario
+    // Por ahora, intentamos restaurar la sesión real inmediatamente
+    Api.me()
+      .then(res => {
+        if (res.success && res.usuario) {
+          State.usuario = res.usuario;
+          showApp();
+        } else {
+          handleLogout();
+        }
+      })
+      .catch(err => {
+        console.warn('Sesión inválida o expirada:', err);
+        handleLogout();
+      });
   }
 });

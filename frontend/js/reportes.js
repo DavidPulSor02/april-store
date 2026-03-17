@@ -99,16 +99,16 @@ function exportCard(titulo, desc, id) {
 }
 
 function renderRepKpis() {
-  const ventas   = MOCK.ventas.reduce((a,v)=>a+v.total,0);
-  const ingresos = MOCK.contabilidad.filter(m=>m.tipo==='ingreso').reduce((a,m)=>a+m.monto,0);
-  const egresos  = MOCK.contabilidad.filter(m=>m.tipo==='egreso' ).reduce((a,m)=>a+m.monto,0);
+  const ventas   = (State.cacheVentas || []).reduce((a,v)=>a+v.total,0);
+  const ingresos = (State.cacheContabilidad || []).filter(m=>m.tipo==='ingreso').reduce((a,m)=>a+m.monto,0);
+  const egresos  = (State.cacheContabilidad || []).filter(m=>m.tipo==='egreso' ).reduce((a,m)=>a+m.monto,0);
   const margen   = ventas > 0 ? Math.round((ingresos-egresos)/ventas*100) : 0;
 
   document.getElementById('rep-kpis').innerHTML = `
-    ${kpiCard('rose',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>', 'Total vendido',  fmt(ventas),          `${MOCK.ventas.length} transacciones`, 'up')}
+    ${kpiCard('rose',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>', 'Total vendido',  fmt(ventas),          `${(State.cacheVentas || []).length} trasacciones`, 'up')}
     ${kpiCard('green', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', 'Balance neto',   fmt(ingresos-egresos),'Ingresos menos egresos', ingresos>egresos?'up':'down')}
     ${kpiCard('amber', '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', 'Margen neto',    margen+'%',           'Del total de ventas', margen>20?'up':'')}
-    ${kpiCard('blue',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>', 'Colaboradoras',  MOCK.colaboradores.length, 'Activas este mes', '')}
+    ${kpiCard('blue',  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>', 'Colaboradoras',  (State.cacheColaboradores || []).length, 'Activas este mes', '')}
   `;
 }
 
@@ -171,10 +171,10 @@ function renderColabs() {
   chartColabs = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: MOCK.colaboradores.map(c => c.nombre.split(' ')[0]),
+      labels: (State.cacheColaboradores || []).map(c => c.nombre.split(' ')[0]),
       datasets: [{
         label: 'Ventas ($)',
-        data: MOCK.colaboradores.map(c => c.ventas_mes || 0),
+        data: (State.cacheColaboradores || []).map(c => c.ventas_mes || 0),
         backgroundColor: ['rgba(200,99,122,0.8)','rgba(200,99,122,0.6)','rgba(200,99,122,0.45)','rgba(200,99,122,0.3)','rgba(200,99,122,0.2)'],
         borderRadius: 4,
       }]
@@ -235,19 +235,19 @@ function exportarCSV(tipo) {
   if (tipo === 'rep-ventas-csv') {
     nombre = 'ventas_april_store.csv';
     csv  = 'Folio,Fecha,Total,Método de pago,Estado\n';
-    csv += MOCK.ventas.map(v => `${v.folio},${fmtD(v.fecha)},${v.total},${v.metodo_pago},${v.estatus}`).join('\n');
+    csv += (State.cacheVentas || []).map(v => `${v.folio},${fmtD(v.fecha)},${v.total},${v.metodo_pago},${v.estatus}`).join('\n');
   } else if (tipo === 'rep-comisiones-csv') {
     nombre = 'comisiones_colaboradoras.csv';
     csv  = 'Colaboradora,Especialidad,Ventas del mes,Comisión (70%),% Comisión\n';
-    csv += MOCK.colaboradores.map(c => `${c.nombre},${c.especialidad||''},${c.ventas_mes||0},${((c.ventas_mes||0)*c.porcentaje_comision/100).toFixed(2)},${c.porcentaje_comision}%`).join('\n');
+    csv += (State.cacheColaboradores || []).map(c => `${c.nombre},${c.especialidad||''},${c.ventas_mes||0},${((c.ventas_mes||0)*c.porcentaje_comision/100).toFixed(2)},${c.porcentaje_comision}%`).join('\n');
   } else if (tipo === 'rep-contab-csv') {
     nombre = 'movimientos_contables.csv';
     csv  = 'Fecha,Concepto,Tipo,Categoría,Monto\n';
-    csv += MOCK.contabilidad.map(m => `${fmtD(m.fecha)},${m.concepto},${m.tipo},${m.categoria_contable},${m.monto}`).join('\n');
+    csv += (State.cacheContabilidad || []).map(m => `${fmtD(m.fecha)},${m.concepto},${m.tipo},${m.categoria_contable},${m.monto}`).join('\n');
   } else if (tipo === 'rep-inventario-csv') {
     nombre = 'inventario_april_store.csv';
     csv  = 'Producto,SKU,Categoría,Colaboradora,Tipo,Precio venta,Stock actual,Stock mínimo\n';
-    csv += MOCK.productos.map(p => `${p.nombre},${p.sku||''},${p.categoria_id?.nombre||''},${p.colaborador_id?.nombre||'Tienda'},${p.tipo},${p.precio_venta},${p.stock_actual},${p.stock_minimo}`).join('\n');
+    csv += State.cacheProductos.map(p => `${p.nombre},${p.sku||''},${p.categoria_id?.nombre||''},${p.colaborador_id?.nombre||'Tienda'},${p.tipo},${p.precio_venta},${p.stock_actual},${p.stock_minimo}`).join('\n');
   }
 
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -270,13 +270,13 @@ function exportarPDF(tipo) {
   let   rows   = '';
 
   if (tipo === 'rep-ventas-csv') {
-    rows = MOCK.ventas.map(v => `<tr><td>${v.folio}</td><td>${fmtDT(v.fecha)}</td><td>${fmt(v.total)}</td><td>${v.metodo_pago}</td><td>${v.estatus}</td></tr>`).join('');
+    rows = (State.cacheVentas || []).map(v => `<tr><td>${v.folio}</td><td>${fmtDT(v.fecha)}</td><td>${fmt(v.total)}</td><td>${v.metodo_pago}</td><td>${v.estatus}</td></tr>`).join('');
     rows = `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5E8EB"><th>Folio</th><th>Fecha</th><th>Total</th><th>Método</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table>`;
   } else if (tipo === 'rep-comisiones-csv') {
-    rows = MOCK.colaboradores.map(c => `<tr><td>${c.nombre}</td><td>${c.especialidad||''}</td><td>${fmt(c.ventas_mes||0)}</td><td>${fmt((c.ventas_mes||0)*c.porcentaje_comision/100)}</td><td>${c.porcentaje_comision}%</td></tr>`).join('');
+    rows = (State.cacheColaboradores || []).map(c => `<tr><td>${c.nombre}</td><td>${c.especialidad||''}</td><td>${fmt(c.ventas_mes||0)}</td><td>${fmt((c.ventas_mes||0)*c.porcentaje_comision/100)}</td><td>${c.porcentaje_comision}%</td></tr>`).join('');
     rows = `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5E8EB"><th>Colaboradora</th><th>Especialidad</th><th>Ventas</th><th>Comisión</th><th>%</th></tr></thead><tbody>${rows}</tbody></table>`;
   } else if (tipo === 'rep-inventario-csv') {
-    rows = MOCK.productos.map(p => `<tr><td>${p.nombre}</td><td>${p.sku||''}</td><td>${fmt(p.precio_venta)}</td><td>${p.stock_actual}</td><td>${p.tipo}</td></tr>`).join('');
+    rows = (State.cacheProductos || []).map(p => `<tr><td>${p.nombre}</td><td>${p.sku||''}</td><td>${fmt(p.precio_venta)}</td><td>${p.stock_actual}</td><td>${p.tipo}</td></tr>`).join('');
     rows = `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#F5E8EB"><th>Producto</th><th>SKU</th><th>Precio</th><th>Stock</th><th>Tipo</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
