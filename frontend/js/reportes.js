@@ -120,8 +120,14 @@ function renderVentasMes() {
   if (chartVentasMes) chartVentasMes.destroy();
 
   const meses  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  // Mock data escalado para demo
-  const valores = [28400,31200,48320,0,0,0,0,0,0,0,0,0];
+  const valores = new Array(12).fill(0);
+  
+  (State.cacheVentas || []).forEach(v => {
+    const d = new Date(v.fecha);
+    if (d.getFullYear() === 2026) {
+      valores[d.getMonth()] += v.total;
+    }
+  });
 
   chartVentasMes = new Chart(ctx, {
     type: 'bar',
@@ -130,8 +136,8 @@ function renderVentasMes() {
       datasets: [{
         label: 'Ventas ($)',
         data: valores,
-        backgroundColor: valores.map((v,i) => i===2 ? 'rgba(200,99,122,0.85)' : 'rgba(200,99,122,0.2)'),
-        borderColor:     valores.map((v,i) => i===2 ? '#C8637A' : '#EFC5CD'),
+        backgroundColor: 'rgba(200,99,122,0.6)',
+        borderColor: '#C8637A',
         borderWidth: 1,
         borderRadius: 4,
       }]
@@ -148,13 +154,23 @@ function renderBalance() {
   if (chartBalance) chartBalance.destroy();
 
   const semanas = ['Sem 1','Sem 2','Sem 3','Sem 4'];
+  const ing = [0,0,0,0];
+  const egr = [0,0,0,0];
+
+  (State.cacheContabilidad || []).forEach(m => {
+    const d = new Date(m.fecha);
+    const sem = Math.min(3, Math.floor(d.getDate() / 8));
+    if (m.tipo === 'ingreso') ing[sem] += m.monto;
+    else egr[sem] += m.monto;
+  });
+
   chartBalance = new Chart(ctx, {
     type: 'line',
     data: {
       labels: semanas,
       datasets: [
-        { label: 'Ingresos', data: [11200,14300,12800,9020], borderColor: '#4A8C6A', backgroundColor: 'rgba(74,140,106,0.08)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#4A8C6A' },
-        { label: 'Egresos',  data: [7800, 9100, 8200, 3570], borderColor: '#C8637A', backgroundColor: 'rgba(200,99,122,0.08)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#C8637A' },
+        { label: 'Ingresos', data: ing, borderColor: '#4A8C6A', backgroundColor: 'rgba(74,140,106,0.08)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#4A8C6A' },
+        { label: 'Egresos',  data: egr, borderColor: '#C8637A', backgroundColor: 'rgba(200,99,122,0.08)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#C8637A' },
       ]
     },
     options: chartOpts('$', true)
@@ -190,13 +206,22 @@ function renderCats() {
   if (!ctx) return;
   if (chartCats) chartCats.destroy();
 
+  const counts = {};
+  (State.cacheProductos || []).forEach(p => {
+    const cat = p.categoria_id?.nombre || 'Sin categoría';
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+
+  const labels = Object.keys(counts);
+  const data   = Object.values(counts);
+
   chartCats = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Joyería','Bolsos','Accesorios','Bisutería','Ropa'],
+      labels: labels.length ? labels : ['Sin datos'],
       datasets: [{
-        data: [12400, 9800, 5600, 8200, 12320],
-        backgroundColor: ['#C8637A','#EFC5CD','#A84D62','#F5E8EB','#3A6EA8'],
+        data: data.length ? data : [1],
+        backgroundColor: ['#C8637A','#EFC5CD','#A84D62','#F5E8EB','#3A6EA8','#9C8490'],
         borderWidth: 0,
         hoverOffset: 6,
       }]
@@ -205,7 +230,7 @@ function renderCats() {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { position: 'right', labels: { font: { family: 'DM Sans', size: 12 }, color: '#5C4650', padding: 12 } },
-        tooltip: { callbacks: { label: (c) => ` ${fmt(c.raw)}` } }
+        tooltip: { callbacks: { label: (c) => ` ${c.raw} productos` } }
       },
       cutout: '65%',
     }

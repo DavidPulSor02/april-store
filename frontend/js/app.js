@@ -365,6 +365,7 @@ async function loadColaboradores() {
   try {
     const res = await Api.get('/api/colaboradores' + (estatus ? `?estatus=${estatus}` : ''));
     const data = res.data || [];
+    State.cacheColaboradores = data; // Actualizar cache
 
     document.getElementById('colab-count').textContent = `${data.length} colaboradoras`;
     grid.innerHTML = data.length ? data.map(c => `
@@ -400,6 +401,7 @@ async function loadVentas() {
   try {
     const res = await Api.get('/api/ventas' + (metodo ? `?metodo=${metodo}` : ''));
     const data = res.data || [];
+    State.cacheVentas = data; // Guardar para reportes y dashboard
 
     document.getElementById('ventas-count').textContent = `${data.length} ventas`;
     tbody.innerHTML = data.length ? data.map(v => `
@@ -433,6 +435,7 @@ async function loadContabilidad() {
   try {
     const res = await Api.get('/api/contabilidad' + (tipo ? `?tipo=${tipo}` : ''));
     const data = res.data || [];
+    State.cacheContabilidad = data; // Para gráficas
 
     // KPIs simplificados basados en la data cargada (en un sistema real el API daría estos agregados)
     const ingresos = data.filter(m=>m.tipo==='ingreso').reduce((a,m)=>a+m.monto,0);
@@ -520,6 +523,7 @@ async function loadCategorias() {
   try {
     const res = await Api.get('/api/categorias');
     const data = res.data || [];
+    State.cacheCategorias = data; // Cache
 
     tbody.innerHTML = data.length ? data.map(c => `
       <tr>
