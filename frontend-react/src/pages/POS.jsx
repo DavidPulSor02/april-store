@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Api } from '../services/api';
-import { Search, ShoppingCart, Trash2, CheckCircle, Package, ScanLine, Printer, Mail } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, CheckCircle, Package, ScanLine, Printer, Mail, Banknote, CreditCard, ArrowRightLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ScannerModal from '../components/ScannerModal';
 import { printTicket, sendTicketEmail } from '../utils/ticketUtils';
@@ -256,14 +256,32 @@ export default function POS() {
             <span style={{ color: 'var(--rose-deep)' }}>${total.toFixed(2)}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            {['efectivo', 'tarjeta', 'transferencia'].map(m => (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+            {[
+              { id: 'efectivo', label: 'Efectivo', icon: Banknote },
+              { id: 'tarjeta', label: 'Tarjeta', icon: CreditCard },
+              { id: 'transferencia', label: 'Transfer.', icon: ArrowRightLeft }
+            ].map(m => (
               <button 
-                key={m}
-                style={{ flex: 1, padding: '8px', fontSize: '12px', borderRadius: '8px', textTransform: 'capitalize', border: metodoPago === m ? '1px solid var(--blue)' : '1px solid var(--border)', background: metodoPago === m ? 'var(--blue-light)' : 'var(--surface-1)', color: metodoPago === m ? 'var(--blue-dark)' : 'var(--ink)' }}
-                onClick={() => setMetodoPago(m)}
+                key={m.id}
+                style={{ 
+                  padding: '12px 4px', 
+                  fontSize: '12px', 
+                  borderRadius: '12px', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  gap: '6px',
+                  fontWeight: 600,
+                  transition: 'all 0.2s',
+                  border: metodoPago === m.id ? '2px solid var(--rose-deep)' : '1px solid var(--border)', 
+                  background: metodoPago === m.id ? 'var(--rose-light)' : 'var(--surface-1)', 
+                  color: metodoPago === m.id ? 'var(--rose-deep)' : 'var(--ink)' 
+                }}
+                onClick={() => setMetodoPago(m.id)}
               >
-                {m}
+                <m.icon size={24} strokeWidth={metodoPago === m.id ? 2.5 : 2} />
+                {m.label}
               </button>
             ))}
           </div>
