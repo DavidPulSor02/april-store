@@ -18,8 +18,11 @@ export default function POS() {
   const [descuento, setDescuento] = useState(0);
   const [metodoPago, setMetodoPago] = useState('efectivo');
 
-  const [showScanner, setShowScanner] = useState(false);
   const [ticketToPrint, setTicketToPrint] = useState(null);
+
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [efectivoRecibido, setEfectivoRecibido] = useState('');
+  const [referenciaPago, setReferenciaPago] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -94,14 +97,22 @@ export default function POS() {
   const subtotal = cart.reduce((sum, item) => sum + (item.precio_venta * item.qty), 0);
   const total = Math.max(0, subtotal - (parseFloat(descuento) || 0));
 
-  const handleCobrar = async () => {
+  const handleCobrar = async (e) => {
+    if (e) e.preventDefault();
     if (cart.length === 0) return;
+    
+    // Validaciones dependiendo del metodo
+    if (metodoPago === 'efectivo' && parseFloat(efectivoRecibido) < total) {
+      alert("El efectivo recibido es menor al total a cobrar.");
+      return;
+    }
     
     try {
       const payload = {
         items: cart.map(item => ({ producto_id: item._id, cantidad: item.qty })),
         metodo_pago: metodoPago,
-        descuento: parseFloat(descuento) || 0
+        descuento: parseFloat(descuento) || 0,
+        notas: referenciaPago ? `Ref: ${referenciaPago}` : ''
       };
       
       const res = await Api.post('/ventas', payload);
@@ -112,8 +123,11 @@ export default function POS() {
       setTicketToPrint(ventaData);
       
       alert('Venta registrada con éxito');
+      setShowCheckout(false);
       clearCart();
       setDescuento(0);
+      setEfectivoRecibido('');
+      setReferenciaPago('');
       fetchData(); // Recargar stock real
     } catch (error) {
       alert(error.message || 'Error registrando la venta');
@@ -169,6 +183,13 @@ export default function POS() {
                   className="hover-card"
                 >
                   <div style={{ fontSize: '12px', color: 'var(--ink-muted)', marginBottom: '4px' }}>{p.sku || 'N/A'}</div>
+                  
+                  {p.imagen_url ? (
+                    <div style={{ width: '100%', height: '100px', marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
+                      <img src={p.imagen_url} alt={p.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ) : null}
+
                   <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.nombre}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                     <div style={{ color: 'var(--rose-deep)', fontWeight: 700 }}>${p.precio_venta}</div>
@@ -250,12 +271,99 @@ export default function POS() {
             className="btn-primary w-full" 
             style={{ padding: '16px', fontSize: '16px', justifyContent: 'center' }}
             disabled={cart.length === 0}
-            onClick={handleCobrar}
+            onClick={() => {
+              if (metodoPago === 'efectivo') setEfectivoRecibido(total.toFixed(2));
+              setShowCheckout(true);
+            }}
           >
-            <CheckCircle size={18} /> Cobrar ${total.toFixed(2)}
+            <CheckCircle size={18} /> Continuar al Pago
           </button>
         </div>
       </div>
+      
+      {showCheckout && (
+        <div className="modal-overlay open" style={{ zIndex: 9999 }}>
+          <div className="modal modal-md open">
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title">Confirmar {metodoPago}</h3>
+                <p className="modal-sub">Total a cobrar: <strong style={{color:'var(--rose-deep)'}}>${total.toFixed(2)}</strong></p>
+              </div>
+              <button className="modal-close" onClick={() => setShowCheckout(false)}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <form id="checkoutForm" onSubmit={handleCobrar}>
+                {metodoPago === 'efectivo' && (
+                  <>
+                    <div className="form-field full-span">
+                      <label>Efectivo Recibido</label>
+                      <div className="input-prefix-wrap">
+                        <span className="input-prefix">$</span>
+                        <input 
+                          type="number" step="0.01" min={total} required 
+                          value={efectivoRecibido} 
+                          onChange={e => setEfectivoRecibido(e.target.value)} 
+                          autoFocus
+                          style={{ fontSize: '20px', fontWeight: 600 }}
+                        />
+                      </div>
+                    </div>
+                    {parseFloat(efectivoRecibido) >= total && (
+                      <div style={{ padding: '16px', background: 'var(--success-light)', borderRadius: '8px', color: 'var(--success-dark)', marginTop: '16px', fontSize: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                        <span>Cambio a entregar:</span>
+                        <span>${(parseFloat(efectivoRecibido) - total).toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {metodoPago === 'transferencia' && (
+                  <div className="form-field full-span">
+                    <div style={{ padding: '16px', background: 'var(--surface-2)', borderRadius: '8px', marginBottom: '16px', fontSize: '12px' }}>
+                      <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Datos para Transferencia:</p>
+                      <p style={{ margin: 0 }}>CLABE: <strong>012 345 6789 0123 4567</strong></p>
+                      <p style={{ margin: '4px 0 0 0' }}>Banco: <strong>STP / BBVA</strong></p>
+                    </div>
+                    <label>Referencia de Rastreo o Nombre del Titular</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. Juan Perez 1205" 
+                      value={referenciaPago}
+                      onChange={e => setReferenciaPago(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                {metodoPago === 'tarjeta' && (
+                  <div className="form-field full-span">
+                     <div style={{ padding: '16px', background: 'var(--surface-2)', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', textAlign: 'center' }}>
+                      <p style={{ margin: '0 0 8px 0', color: 'var(--ink-mid)' }}>Terminal de Cobro (Stripe / Clip)</p>
+                      <p style={{ margin: 0, fontWeight: 500 }}>Realiza el cobro de ${total.toFixed(2)} en tu terminal física y anota el número de aprobación abajo.</p>
+                    </div>
+                    <label>Número de Aprobación Tarjeta</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. APROB 03214" 
+                      value={referenciaPago}
+                      onChange={e => setReferenciaPago(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+              </form>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={() => setShowCheckout(false)}>Cancelar</button>
+              <button form="checkoutForm" type="submit" className="btn-primary">
+                <CheckCircle size={16}/> Completar Venta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {showScanner && (
         <ScannerModal onClose={() => setShowScanner(false)} onScan={handleScan} />
