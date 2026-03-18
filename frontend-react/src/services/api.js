@@ -21,7 +21,7 @@ export const Api = {
         data,
         headers,
       });
-      return response.data;
+      return response.data.data !== undefined ? response.data.data : response.data;
     } catch (error) {
       const msg = error.response?.data?.message || 'Error desconocido';
       throw { status: error.response?.status, message: msg };

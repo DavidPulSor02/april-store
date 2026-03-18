@@ -29,9 +29,14 @@ export default function Ventas() {
     }
   };
 
-  const verDetalle = (v) => {
-    setVentaActual(v);
-    setShowDetalle(true);
+  const verDetalle = async (v) => {
+    try {
+      const res = await Api.get(`/ventas/${v._id}`);
+      setVentaActual(res);
+      setShowDetalle(true);
+    } catch (err) {
+      alert("Error cargando detalles de la venta");
+    }
   };
 
   const filtered = ventas.filter(v => {
