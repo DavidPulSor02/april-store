@@ -7,31 +7,27 @@
     },
     {
       "source": "/mobile/js/(.*)",
-      "destination": "/frontend/mobile/js/$1"
+      "destination": "/frontend-react/dist/mobile/js/$1"
     },
     {
       "source": "/mobile/css/(.*)",
-      "destination": "/frontend/mobile/css/$1"
+      "destination": "/frontend-react/dist/mobile/css/$1"
     },
     {
-      "source": "/js/(.*)",
-      "destination": "/frontend/js/$1"
-    },
-    {
-      "source": "/css/(.*)",
-      "destination": "/frontend/css/$1"
+      "source": "/assets/(.*)",
+      "destination": "/frontend-react/dist/assets/$1"
     },
     {
       "source": "/mobile",
-      "destination": "/frontend/mobile/index.html"
+      "destination": "/frontend-react/dist/mobile/index.html"
     },
     {
       "source": "/mobile/(.*)",
-      "destination": "/frontend/mobile/index.html"
+      "destination": "/frontend-react/dist/mobile/index.html"
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/index.html"
+      "destination": "/frontend-react/dist/index.html"
     }
   ]
 }
