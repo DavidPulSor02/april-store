@@ -79,6 +79,9 @@ export default function Sidebar({ user }) {
             <NavLink to="/contabilidad" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
               <TrendingUp className="nav-icon" /> Contabilidad
             </NavLink>
+            <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+              <Users className="nav-icon" /> Usuarios (Cajeras)
+            </NavLink>
             <button className="nav-item">
               <Settings className="nav-icon" /> Configuración
             </button>

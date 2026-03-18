@@ -15,6 +15,7 @@ export default function Topbar({ user }) {
     if (path.includes('consignaciones')) return 'Consignaciones';
     if (path.includes('pagos')) return 'Pagos a Colaboradoras';
     if (path.includes('contabilidad')) return 'Contabilidad';
+    if (path.includes('usuarios')) return 'Usuarios del Sistema';
     return 'Dashboard';
   };
 

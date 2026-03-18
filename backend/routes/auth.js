@@ -67,4 +67,12 @@ router.get('/me', auth, async (req, res) => {
   res.json({ success: true, usuario: u });
 });
 
+// GET /api/auth/usuarios (solo admin)
+router.get('/usuarios', auth, async (req, res) => {
+  if (req.usuario.rol !== 'admin')
+    return res.status(403).json({ success: false, message: 'Sin permisos' });
+  const usuarios = await Usuario.find({}).select('-password_hash').sort({ creado_en: -1 });
+  res.json({ success: true, data: usuarios });
+});
+
 module.exports = router;
