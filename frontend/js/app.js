@@ -1014,7 +1014,7 @@ async function confirmarResetDB() {
   if (btn) { btn.textContent = 'Limpiando…'; btn.disabled = true; }
 
   try {
-    const res = await Api.post('/api/admin/reset-db', {});
+    const res = await Api.post('/admin/reset-db', {});
     if (res.success) {
       closeAllModals();
       toast('✅ Base de datos limpiada correctamente', 'success');
