@@ -99,6 +99,10 @@ function showApp() {
   document.getElementById('nav-group-colaboradores').style.display  = isAdmin ? 'block' : 'none';
   document.getElementById('nav-group-finanzas').style.display       = isAdmin ? 'block' : 'none';
   
+  // Botón de reset solo para admin
+  const resetWrap = document.getElementById('reset-db-btn-wrap');
+  if (resetWrap) resetWrap.classList.toggle('hidden', !isAdmin);
+
   // Elementos extra en el topbar
   const topbarCta = document.getElementById('topbar-cta');
   if (topbarCta) topbarCta.style.display = isAdmin ? 'flex' : 'none';
@@ -1039,3 +1043,33 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 });
+
+// ── RESET BASE DE DATOS ───────────────────────────────────
+function openResetModal() {
+  openModal('modal-reset-db');
+}
+
+async function confirmarResetDB() {
+  const btn = document.getElementById('btn-confirm-reset');
+  if (btn) { btn.textContent = 'Limpiando…'; btn.disabled = true; }
+
+  try {
+    const res = await Api.post('/api/admin/reset-db', {});
+    if (res.success) {
+      closeAllModals();
+      toast('✅ Base de datos limpiada correctamente', 'success');
+      // Recargar datos del dashboard
+      setTimeout(() => {
+        loadDashboard();
+        checkStockAlerts();
+      }, 500);
+    } else {
+      toast(res.message || 'Error al limpiar la base de datos', 'error');
+    }
+  } catch (err) {
+    console.error('Error en reset:', err);
+    toast('Error al conectar con el servidor', 'error');
+  } finally {
+    if (btn) { btn.textContent = 'Limpiar todo'; btn.disabled = false; }
+  }
+}

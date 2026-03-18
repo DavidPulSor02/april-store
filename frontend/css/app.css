@@ -736,6 +736,24 @@ body {
 }
 .link-btn:hover { color: var(--rose-deep); text-decoration: underline; }
 
+.btn-reset-db {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed rgba(184,69,69,.35);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: all var(--transition);
+}
+.btn-reset-db:hover { opacity: 1; background: var(--danger-bg); border-style: solid; }
+
 .row-action-btn {
   width: 28px; height: 28px;
   border-radius: var(--radius-sm);
