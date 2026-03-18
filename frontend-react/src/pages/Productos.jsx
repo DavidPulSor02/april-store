@@ -15,7 +15,7 @@ export default function Productos() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '', sku: '', categoria_id: '', tipo: 'consignacion', colaborador_id: '',
-    precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: ''
+    precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: '', imagen_url: ''
   });
 
   useEffect(() => {
@@ -46,6 +46,32 @@ export default function Productos() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Comprimir a JPEG calidad media para no saturar MongoDB
+        const base64 = canvas.toDataURL('image/jpeg', 0.7);
+        setFormData(prev => ({ ...prev, imagen_url: base64 }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (e) => {
@@ -91,7 +117,7 @@ export default function Productos() {
     setIsEditing(false);
     setFormData({
       nombre: '', sku: '', categoria_id: '', tipo: 'consignacion', colaborador_id: '',
-      precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: ''
+      precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: '', imagen_url: ''
     });
     setShowModal(true);
   };
@@ -155,8 +181,8 @@ export default function Productos() {
                   <tr key={p._id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="colab-card-av" style={{ width: '32px', height: '32px', background: 'var(--surface-3)', border: 'none', color: 'var(--ink-mid)' }}>
-                          <Package size={14} />
+                        <div className="colab-card-av" style={{ width: '32px', height: '32px', background: 'var(--surface-3)', border: 'none', color: 'var(--ink-mid)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {p.imagen_url ? <img src={p.imagen_url} alt="img" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={14} />}
                         </div>
                         <div className="cell-primary" style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nombre}</div>
                       </div>
@@ -200,15 +226,32 @@ export default function Productos() {
             </div>
             <div className="modal-body">
               <form id="prodForm" onSubmit={handleSave}>
-                <div className="form-grid-2">
-                  <div className="form-field full-span">
-                    <label>Nombre *</label>
-                    <input type="text" required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} />
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ width: '100px', height: '100px', background: 'var(--surface-2)', borderRadius: '12px', border: '1px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                    {formData.imagen_url ? (
+                      <img src={formData.imagen_url} alt="Vista previa" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ textAlign: 'center', color: 'var(--ink-muted)', fontSize: '10px' }}>
+                        <Package size={24} style={{ margin: '0 auto 4px' }}/>
+                        Sin Imagen
+                      </div>
+                    )}
+                    <label style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '10px', textAlign: 'center', padding: '4px', cursor: 'pointer', margin: 0 }}>
+                      Tomar / Subir
+                      <input type="file" accept="image/*" capture="environment" style={{ opacity: 0, position: 'absolute', zIndex: -1 }} onChange={handleImageUpload} />
+                    </label>
                   </div>
-                  <div className="form-field">
+                  
+                  <div className="form-field w-full" style={{ flex: 1, margin: 0 }}>
+                    <label>Nombre *</label>
+                    <input type="text" required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} style={{ marginBottom: '12px' }} />
+                    
                     <label>SKU</label>
                     <input type="text" value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} />
                   </div>
+                </div>
+
+                <div className="form-grid-2">
                   <div className="form-field">
                     <label>Categoría *</label>
                     <select required value={formData.categoria_id} onChange={e => setFormData({...formData, categoria_id: e.target.value})}>
