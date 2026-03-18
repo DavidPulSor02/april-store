@@ -309,6 +309,34 @@ function kpiCard(color, icon, label, value, delta, deltaClass) {
 }
 
 // ── PRODUCTOS ─────────────────────────────────────────────
+function renderProductosRows(data) {
+  const tbody = document.getElementById('tbody-productos');
+  document.getElementById('prod-count').textContent = `${data.length} producto${data.length !== 1 ? 's' : ''}`;
+  tbody.innerHTML = data.length ? data.map(p => {
+    const stockPct  = Math.min(100, Math.round(p.stock_actual / (p.stock_minimo * 3) * 100));
+    const stockColor= p.stock_actual <= 3 ? '#B84545' : p.stock_actual <= p.stock_minimo ? '#C47B2A' : '#4A8C6A';
+    return `<tr>
+      <td><div class="cell-primary">${p.nombre}</div><div class="cell-muted">${p.sku || '—'}</div></td>
+      <td>${p.categoria_id?.nombre || '—'}</td>
+      <td>${p.colaborador_id?.nombre || '<span class="badge badge-neutral">Tienda</span>'}</td>
+      <td class="cell-primary">${fmt(p.precio_venta)}</td>
+      <td>
+        <div class="stock-cell">
+          <span class="stock-num" style="color:${stockColor}">${p.stock_actual}</span>
+          <div class="progress"><div class="progress-bar-fill" style="width:${stockPct}%;background:${stockColor}"></div></div>
+        </div>
+      </td>
+      <td>${p.tipo === 'consignacion' ? '<span class="badge badge-rose">Consignación</span>' : '<span class="badge badge-neutral">Propio</span>'}</td>
+      <td>${estatusBadge(p.estatus)}</td>
+      <td>
+        <button class="row-action-btn" onclick="openProductoModal('${p._id}')" title="Editar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('') : emptyRow(8, 'Sin productos registrados');
+}
+
 async function loadProductos() {
   const tipo    = document.getElementById('filter-tipo')?.value || '';
   const estatus = document.getElementById('filter-estatus-prod')?.value || '';
@@ -319,36 +347,10 @@ async function loadProductos() {
   try {
     const res = await Api.productos(estatus);
     let data = res.data || [];
-
     State.cacheProductos = data; // Guardar en cache para POS y otros
 
     if (tipo) data = data.filter(p => p.tipo === tipo);
-
-    document.getElementById('prod-count').textContent = `${data.length} productos`;
-
-    tbody.innerHTML = data.length ? data.map(p => {
-      const stockPct  = Math.min(100, Math.round(p.stock_actual / (p.stock_minimo * 3) * 100));
-      const stockColor= p.stock_actual <= 3 ? '#B84545' : p.stock_actual <= p.stock_minimo ? '#C47B2A' : '#4A8C6A';
-      return `<tr>
-        <td><div class="cell-primary">${p.nombre}</div><div class="cell-muted">${p.sku || '—'}</div></td>
-        <td>${p.categoria_id?.nombre || '—'}</td>
-        <td>${p.colaborador_id?.nombre || '<span class="badge badge-neutral">Tienda</span>'}</td>
-        <td class="cell-primary">${fmt(p.precio_venta)}</td>
-        <td>
-          <div class="stock-cell">
-            <span class="stock-num" style="color:${stockColor}">${p.stock_actual}</span>
-            <div class="progress"><div class="progress-bar-fill" style="width:${stockPct}%;background:${stockColor}"></div></div>
-          </div>
-        </td>
-        <td>${p.tipo === 'consignacion' ? '<span class="badge badge-rose">Consignación</span>' : '<span class="badge badge-neutral">Propio</span>'}</td>
-        <td>${estatusBadge(p.estatus)}</td>
-        <td>
-          <button class="row-action-btn" onclick="openProductoModal('${p._id}')" title="Editar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-        </td>
-      </tr>`;
-    }).join('') : emptyRow(8, 'Sin productos registrados');
+    renderProductosRows(data);
 
   } catch (err) {
     console.error('Error cargando productos:', err);
@@ -356,7 +358,45 @@ async function loadProductos() {
   }
 }
 
+function filterProductosLocal(q) {
+  const tipo    = document.getElementById('filter-tipo')?.value || '';
+  let data = State.cacheProductos || [];
+  if (tipo) data = data.filter(p => p.tipo === tipo);
+  if (q.trim()) {
+    const lq = q.toLowerCase();
+    data = data.filter(p =>
+      p.nombre.toLowerCase().includes(lq) ||
+      (p.sku && p.sku.toLowerCase().includes(lq)) ||
+      (p.categoria_id?.nombre && p.categoria_id.nombre.toLowerCase().includes(lq))
+    );
+  }
+  renderProductosRows(data);
+}
+
 // ── COLABORADORES ─────────────────────────────────────────
+function renderColabsGrid(data) {
+  const grid = document.getElementById('colabs-grid');
+  document.getElementById('colab-count').textContent = `${data.length} colaboradora${data.length !== 1 ? 's' : ''}`;
+  grid.innerHTML = data.length ? data.map(c => `
+    <div class="colab-card" onclick="openColaboradorModal('${c._id}')">
+      <div class="colab-card-top">
+        <div class="colab-card-av">${initials(c.nombre)}</div>
+        <div>
+          <div class="colab-card-name">${c.nombre}</div>
+          <div class="colab-card-spec">${c.especialidad || '—'}</div>
+        </div>
+      </div>
+      <div class="colab-card-stats">
+        <div><div class="colab-stat-val">${fmt(c.ventas_mes || 0)}</div><div class="colab-stat-lbl">Ventas mes</div></div>
+        <div><div class="colab-stat-val">${c.piezas || 0}</div><div class="colab-stat-lbl">Piezas</div></div>
+      </div>
+      <div class="colab-card-footer">
+        <span class="colab-comision">Comisión: <strong>${c.porcentaje_comision}%</strong></span>
+        ${estatusBadge(c.estatus)}
+      </div>
+    </div>`).join('') : '<div class="empty-state">Sin colaboradoras registradas</div>';
+}
+
 async function loadColaboradores() {
   const estatus = document.getElementById('filter-est-colab')?.value || 'activo';
   const grid = document.getElementById('colabs-grid');
@@ -366,33 +406,45 @@ async function loadColaboradores() {
     const res = await Api.get('/api/colaboradores' + (estatus ? `?estatus=${estatus}` : ''));
     const data = res.data || [];
     State.cacheColaboradores = data; // Actualizar cache
-
-    document.getElementById('colab-count').textContent = `${data.length} colaboradoras`;
-    grid.innerHTML = data.length ? data.map(c => `
-      <div class="colab-card" onclick="openColaboradorModal('${c._id}')">
-        <div class="colab-card-top">
-          <div class="colab-card-av">${initials(c.nombre)}</div>
-          <div>
-            <div class="colab-card-name">${c.nombre}</div>
-            <div class="colab-card-spec">${c.especialidad || '—'}</div>
-          </div>
-        </div>
-        <div class="colab-card-stats">
-          <div><div class="colab-stat-val">${fmt(c.ventas_mes || 0)}</div><div class="colab-stat-lbl">Ventas mes</div></div>
-          <div><div class="colab-stat-val">${c.piezas || 0}</div><div class="colab-stat-lbl">Piezas</div></div>
-        </div>
-        <div class="colab-card-footer">
-          <span class="colab-comision">Comisión: <strong>${c.porcentaje_comision}%</strong></span>
-          ${estatusBadge(c.estatus)}
-        </div>
-      </div>`).join('') : '<div class="empty-state">Sin colaboradoras registradas</div>';
+    renderColabsGrid(data);
   } catch (err) {
     console.error('Error cargando colaboradoras:', err);
     grid.innerHTML = '<div class="error-state">Error al cargar datos</div>';
   }
 }
 
+function filterColabsLocal(q) {
+  let data = State.cacheColaboradores || [];
+  if (q.trim()) {
+    const lq = q.toLowerCase();
+    data = data.filter(c =>
+      c.nombre.toLowerCase().includes(lq) ||
+      (c.especialidad && c.especialidad.toLowerCase().includes(lq))
+    );
+  }
+  renderColabsGrid(data);
+}
+
 // ── VENTAS ────────────────────────────────────────────────
+function renderVentasRows(data) {
+  const tbody = document.getElementById('tbody-ventas');
+  document.getElementById('ventas-count').textContent = `${data.length} venta${data.length !== 1 ? 's' : ''}`;
+  tbody.innerHTML = data.length ? data.map(v => `
+    <tr>
+      <td class="cell-primary">${v.folio}</td>
+      <td>${fmtDT(v.fecha)}</td>
+      <td>${v.usuario_id?.nombre || '—'}</td>
+      <td class="cell-primary">${fmt(v.total)}</td>
+      <td>${metodoBadge(v.metodo_pago)}</td>
+      <td>${estatusBadge(v.estatus)}</td>
+      <td>
+        <button class="row-action-btn" onclick="openDetalleVenta('${v._id}')" title="Ver detalle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </td>
+    </tr>`).join('') : emptyRow(7, 'Sin ventas registradas');
+}
+
 async function loadVentas() {
   const metodo = document.getElementById('filter-metodo')?.value;
   const tbody = document.getElementById('tbody-ventas');
@@ -402,26 +454,23 @@ async function loadVentas() {
     const res = await Api.get('/api/ventas' + (metodo ? `?metodo=${metodo}` : ''));
     const data = res.data || [];
     State.cacheVentas = data; // Guardar para reportes y dashboard
-
-    document.getElementById('ventas-count').textContent = `${data.length} ventas`;
-    tbody.innerHTML = data.length ? data.map(v => `
-      <tr>
-        <td class="cell-primary">${v.folio}</td>
-        <td>${fmtDT(v.fecha)}</td>
-        <td>${v.usuario_id?.nombre || '—'}</td>
-        <td class="cell-primary">${fmt(v.total)}</td>
-        <td>${metodoBadge(v.metodo_pago)}</td>
-        <td>${estatusBadge(v.estatus)}</td>
-        <td>
-          <button class="row-action-btn" onclick="openDetalleVenta('${v._id}')" title="Ver detalle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </td>
-      </tr>`).join('') : emptyRow(7, 'Sin ventas registradas');
+    renderVentasRows(data);
   } catch (err) {
     console.error('Error cargando ventas:', err);
     tbody.innerHTML = '<tr><td colspan="7" class="error-state">Error al cargar datos</td></tr>';
   }
+}
+
+function filterVentasLocal(q) {
+  let data = State.cacheVentas || [];
+  if (q.trim()) {
+    const lq = q.toLowerCase();
+    data = data.filter(v =>
+      v.folio.toLowerCase().includes(lq) ||
+      (v.usuario_id?.nombre && v.usuario_id.nombre.toLowerCase().includes(lq))
+    );
+  }
+  renderVentasRows(data);
 }
 
 // ── CONTABILIDAD ──────────────────────────────────────────
@@ -463,6 +512,22 @@ async function loadContabilidad() {
 }
 
 // ── CONSIGNACIONES ────────────────────────────────────────
+function renderConsigRows(data) {
+  const tbody = document.getElementById('tbody-consig');
+  const countEl = document.getElementById('consig-count');
+  if (countEl) countEl.textContent = `${data.length} consignación${data.length !== 1 ? 'es' : ''}`;
+  tbody.innerHTML = data.length ? data.map(c => `
+    <tr>
+      <td class="cell-primary">${c.producto_id?.nombre || '—'}</td>
+      <td>${c.colaborador_id?.nombre || '—'}</td>
+      <td>${c.cantidad_ingresada}</td>
+      <td><strong>${c.cantidad_disponible}</strong></td>
+      <td>${c.cantidad_vendida}</td>
+      <td>${estatusBadge(c.estatus)}</td>
+      <td>${fmtD(c.fecha_ingreso)}</td>
+    </tr>`).join('') : emptyRow(7, 'Sin consignaciones activas');
+}
+
 async function loadConsignaciones() {
   const tbody = document.getElementById('tbody-consig');
   tbody.innerHTML = '<tr><td colspan="7" class="loading-state">Cargando...</td></tr>';

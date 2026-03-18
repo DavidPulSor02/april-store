@@ -319,6 +319,31 @@ body {
 }
 .search-input:focus { border-color: var(--rose-light); background: var(--surface); width: 240px; }
 
+/* ── MODULE SEARCH (inline in toolbar) ─────────────────────── */
+.search-wrap-inline {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-wrap-inline .search-icon { position: absolute; left: 9px; color: var(--ink-muted); pointer-events: none; }
+.search-input-sm {
+  padding: 7px 12px 7px 30px;
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: var(--surface);
+  width: 220px;
+  transition: all var(--transition);
+  outline: none;
+}
+.search-input-sm:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(200,99,122,.1);
+  width: 260px;
+}
+
 .alert-badge {
   position: relative;
   width: 36px; height: 36px;

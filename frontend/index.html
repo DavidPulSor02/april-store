@@ -37,7 +37,7 @@
       <span>Iniciar sesión</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
-    <p class="login-hint">Demo: admin@aprilstore.mx / admin123</p>
+
   </div>
 </div>
 
@@ -141,10 +141,6 @@
         <div class="breadcrumb" id="breadcrumb">Inicio / Dashboard</div>
       </div>
       <div class="topbar-right">
-        <div class="search-wrap">
-          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" class="search-input" placeholder="Buscar…" id="global-search"/>
-        </div>
         <div class="alert-badge" id="alert-bell" onclick="navigate('productos')" title="Alertas de stock">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
           <span class="badge-dot" id="badge-dot"></span>
@@ -197,6 +193,10 @@
       <section id="page-productos" class="page">
         <div class="table-toolbar">
           <div class="filter-row">
+            <div class="search-wrap-inline">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="search-input-sm" id="prod-search-text" placeholder="Buscar producto o SKU…" oninput="filterProductosLocal(this.value)"/>
+            </div>
             <select class="select-sm" id="filter-tipo" onchange="loadProductos()">
               <option value="">Todos</option>
               <option value="propio">Propios</option>
@@ -230,6 +230,10 @@
       <section id="page-colaboradores" class="page">
         <div class="table-toolbar">
           <div class="filter-row">
+            <div class="search-wrap-inline">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="search-input-sm" id="colab-search-text" placeholder="Buscar colaboradora…" oninput="filterColabsLocal(this.value)"/>
+            </div>
             <select class="select-sm" id="filter-est-colab" onchange="loadColaboradores()">
               <option value="activo">Activas</option>
               <option value="">Todas</option>
@@ -247,6 +251,10 @@
       <section id="page-ventas" class="page">
         <div class="table-toolbar">
           <div class="filter-row">
+            <div class="search-wrap-inline">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="search-input-sm" id="venta-search-text" placeholder="Buscar folio…" oninput="filterVentasLocal(this.value)"/>
+            </div>
             <input type="date" class="select-sm" id="filter-desde"/>
             <input type="date" class="select-sm" id="filter-hasta"/>
             <select class="select-sm" id="filter-metodo" onchange="loadVentas()">
@@ -294,6 +302,17 @@
 
       <!-- ── CONSIGNACION ───────────────────────────────── -->
       <section id="page-consignacion" class="page">
+        <div class="table-toolbar">
+          <div class="filter-row">
+            <div class="search-wrap-inline">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="search-input-sm" id="consig-search-text" placeholder="Buscar producto o colaboradora…" oninput="filterConsigLocal(this.value)"/>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <span class="count-label" id="consig-count">— consignaciones</span>
+          </div>
+        </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Producto</th><th>Colaboradora</th><th>Ingresado</th><th>Disponible</th><th>Vendido</th><th>Estado</th><th>Fecha entrada</th></tr></thead>
