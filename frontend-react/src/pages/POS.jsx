@@ -119,7 +119,10 @@ export default function POS() {
       const res = await Api.post('/ventas', payload);
       
       // Armar la estructura falsa para el ticket si el backend no lo devuelve entero mapeado
-      const ventaData = res.venta || { folio: 'VTA-RECIENTE', fecha: new Date(), metodo_pago: metodoPago, total, descuento: parseFloat(descuento)||0, items: cart.map(i => ({ producto_id: i, cantidad: i.qty, precio_unitario: i.precio_venta })) };
+      const ventaData = res.venta || res || { folio: 'VTA-RECIENTE', fecha: new Date(), metodo_pago: metodoPago, total, descuento: parseFloat(descuento)||0, items: cart.map(i => ({ producto_id: i, cantidad: i.qty, precio_unitario: i.precio_venta })) };
+      
+      // Si el response directo trae el _id, se lo pasamos para que el modal de envío de mail funcione
+      if (res && res._id && !ventaData._id) ventaData._id = res._id;
       
       setTicketToPrint(ventaData);
       
