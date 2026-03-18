@@ -18,6 +18,7 @@ export default function POS() {
   const [descuento, setDescuento] = useState(0);
   const [metodoPago, setMetodoPago] = useState('efectivo');
 
+  const [showScanner, setShowScanner] = useState(false);
   const [ticketToPrint, setTicketToPrint] = useState(null);
 
   const [showCheckout, setShowCheckout] = useState(false);
