@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "outputDirectory": "frontend-react/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -7,27 +8,19 @@
     },
     {
       "source": "/mobile/js/(.*)",
-      "destination": "/frontend-react/dist/mobile/js/$1"
+      "destination": "/mobile/js/$1"
     },
     {
       "source": "/mobile/css/(.*)",
-      "destination": "/frontend-react/dist/mobile/css/$1"
+      "destination": "/mobile/css/$1"
     },
     {
       "source": "/assets/(.*)",
-      "destination": "/frontend-react/dist/assets/$1"
-    },
-    {
-      "source": "/mobile",
-      "destination": "/frontend-react/dist/mobile/index.html"
-    },
-    {
-      "source": "/mobile/(.*)",
-      "destination": "/frontend-react/dist/mobile/index.html"
+      "destination": "/assets/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend-react/dist/index.html"
+      "destination": "/index.html"
     }
   ]
 }
