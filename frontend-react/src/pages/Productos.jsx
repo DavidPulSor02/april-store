@@ -1,6 +1,7 @@
+import { useState, useEffect, useRef } from 'react';
+import { Api } from '../services/api';
 import { Plus, Search, Edit2, Trash2, Package, Printer, Barcode as BarcodeIcon } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
-import { useRef } from 'react';
 
 export default function Productos() {
   const [productos, setProductos] = useState([]);
