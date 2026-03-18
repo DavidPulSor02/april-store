@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Api } from '../services/api';
-import { Search, ShoppingCart, Trash2, CheckCircle, Package } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, CheckCircle, Package, ScanLine, Printer, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ScannerModal from '../components/ScannerModal';
+import { printTicket, sendTicketEmail } from '../utils/ticketUtils';
 
 export default function POS() {
   const { user } = useAuth();
@@ -15,6 +17,9 @@ export default function POS() {
   const [cart, setCart] = useState([]);
   const [descuento, setDescuento] = useState(0);
   const [metodoPago, setMetodoPago] = useState('efectivo');
+
+  const [showScanner, setShowScanner] = useState(false);
+  const [ticketToPrint, setTicketToPrint] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -57,6 +62,17 @@ export default function POS() {
     });
   };
 
+  const handleScan = (sku) => {
+    const prod = productos.find(p => p.sku === sku || p._id === sku);
+    if (prod) {
+      addToCart(prod);
+    } else {
+      alert("Producto no encontrado: " + sku);
+    }
+  };
+
+  const currentCount = cart.reduce((acc, item) => acc + item.qty, 0);
+
   const updateQty = (id, delta) => {
     setCart(prev => prev.map(item => {
       if (item._id === id) {
@@ -88,7 +104,13 @@ export default function POS() {
         descuento: parseFloat(descuento) || 0
       };
       
-      await Api.post('/ventas', payload);
+      const res = await Api.post('/ventas', payload);
+      
+      // Armar la estructura falsa para el ticket si el backend no lo devuelve entero mapeado
+      const ventaData = res.venta || { folio: 'VTA-RECIENTE', fecha: new Date(), metodo_pago: metodoPago, total, descuento: parseFloat(descuento)||0, items: cart.map(i => ({ producto_id: i, cantidad: i.qty, precio_unitario: i.precio_venta })) };
+      
+      setTicketToPrint(ventaData);
+      
       alert('Venta registrada con éxito');
       clearCart();
       setDescuento(0);
@@ -122,6 +144,9 @@ export default function POS() {
               autoFocus
             />
           </div>
+          <button className="btn-secondary" onClick={() => setShowScanner(true)}>
+            <ScanLine size={18}/> Escanear
+          </button>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '8px' }} className="hide-scroll">
@@ -231,6 +256,41 @@ export default function POS() {
           </button>
         </div>
       </div>
+      
+      {showScanner && (
+        <ScannerModal onClose={() => setShowScanner(false)} onScan={handleScan} />
+      )}
+      
+      {ticketToPrint && (
+        <div className="modal-overlay open" style={{ zIndex: 9999 }}>
+          <div className="modal modal-sm open" style={{ textAlign: 'center' }}>
+            <div className="modal-body" style={{ padding: '32px 24px' }}>
+              <CheckCircle size={48} color="var(--success)" style={{ marginBottom: '16px' }}/>
+              <h2 style={{ marginBottom: '8px' }}>Venta Exitosa</h2>
+              <p style={{ color: 'var(--ink-muted)', marginBottom: '24px' }}>La transacción se ha registrado correctamente.</p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button className="btn-primary" onClick={() => { printTicket(ticketToPrint); setTicketToPrint(null); }}>
+                  <Printer size={16}/> Imprimir Ticket
+                </button>
+                <button className="btn-ghost" onClick={() => {
+                  const email = prompt("Ingresa el correo del cliente:");
+                  if (email && email.includes('@')) {
+                    if (ticketToPrint._id) sendTicketEmail(ticketToPrint._id, email).then(()=>alert("Enviado")).catch(e=>alert(e.message));
+                    else alert("Simulación de envío en desarrollo: " + email);
+                    setTicketToPrint(null);
+                  }
+                }}>
+                  <Mail size={16}/> Enviar por Correo
+                </button>
+                <button className="btn-ghost" onClick={() => setTicketToPrint(null)} style={{ color: 'var(--ink-muted)' }}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
