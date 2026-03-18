@@ -249,56 +249,16 @@ function openPrimaryModal() {
 
 // ── DASHBOARD ─────────────────────────────────────────────
 async function loadDashboard() {
-  const kpiRow = document.getElementById('kpi-row');
-  const barChart = document.getElementById('bar-chart');
-  const topColabs = document.getElementById('top-colabs-list');
-  
-  kpiRow.innerHTML = '<div class="loading-state">Cargando...</div>';
-
+  // El dashboard ya no muestra cards de datos — solo verifica alertas de stock
+  // para el badge del ícono de la campanita
   try {
-    const r = await Api.dashboard();
-    const d = r.data;
-
-    if (!d) throw new Error('No hay datos disponibles');
-
-    // KPI Cards
-    kpiRow.innerHTML = `
-      ${kpiCard('rose',
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
-        'Ventas del mes', fmt(d.ventas_mes.total), `↑ ${d.ventas_mes.count} transacciones`, 'up')}
-      ${kpiCard('green',
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-        'Ventas de hoy', fmt(d.ventas_hoy.total), `${d.ventas_hoy.count} artículos vendidos`, '')}
-      ${kpiCard('amber',
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>`,
-        'Productos activos', d.productos_activos, `${d.alertas_stock} con stock bajo`, d.alertas_stock > 0 ? 'down' : '')}
-      ${kpiCard('blue',
-        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
-        'Colaboradoras activas', d.colaboradores_activos, 'Consignatarias', '')}
-    `;
-
-    // Bar chart
-    const max = Math.max(...d.grafica_dias.map(x => x.total), 1);
-    barChart.innerHTML = d.grafica_dias.map((x, i) => `
-      <div class="bar-col">
-        <div class="bar-val">${i===d.grafica_dias.length-1?fmt(x.total):''}</div>
-        <div class="bar-fill${i===d.grafica_dias.length-1?' today':''}"
-             style="height:${Math.max(8, Math.round(x.total/max*80))}px"
-             title="${x._id}: ${fmt(x.total)}"></div>
-        <div class="bar-label">${x._id}</div>
-      </div>`).join('');
-
-    // Top colabs
-    topColabs.innerHTML = d.top_colaboradores.length ? d.top_colaboradores.map(c => `
-      <div class="colab-row">
-        <div class="colab-av">${initials(c.colaborador?.nombre)}</div>
-        <div><div class="colab-nm">${c.colaborador?.nombre || 'Desconocido'}</div><div class="colab-sub">${c.piezas} piezas</div></div>
-        <div class="colab-amt"><div class="colab-val">${fmt(c.total)}</div><div class="colab-pct">Comisión: ${fmt(c.comision)}</div></div>
-      </div>`).join('') : '<div class="empty-state">Sin actividad reciente</div>';
-
-  } catch (err) {
-    console.error('Error cargando dashboard:', err);
-    kpiRow.innerHTML = '<div class="error-state">Error al cargar datos</div>';
+    const res = await Api.productos('activo');
+    const data = res.data || [];
+    State.cacheProductos = data;
+    checkStockAlerts();
+  } catch (e) {
+    // No crítico si falla
+    console.warn('No se pudo verificar stock para alertas:', e);
   }
 }
 

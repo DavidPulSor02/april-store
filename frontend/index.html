@@ -164,37 +164,33 @@
 
       <!-- ── DASHBOARD ─────────────────────────────────── -->
       <section id="page-dashboard" class="page active">
-        <div class="kpi-row" id="kpi-row"></div>
-        <div class="dash-grid">
-          <div class="panel" id="panel-chart">
-            <div class="panel-header">
-              <span class="panel-title">Ventas — últimos 8 días</span>
-              <span class="panel-tag">Este mes</span>
-            </div>
-            <div class="bar-chart" id="bar-chart"></div>
+        <div class="dash-welcome">
+          <div class="dash-welcome-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
-          <div class="panel" id="panel-colabs">
-            <div class="panel-header">
-              <span class="panel-title">Top colaboradoras</span>
-              <button class="link-btn" onclick="navigate('colaboradores')">Ver todas</button>
-            </div>
-            <div id="top-colabs-list"></div>
-          </div>
-        </div>
-        <div class="dash-grid-3">
-          <div class="panel col-2" id="panel-activity">
-            <div class="panel-header"><span class="panel-title">Actividad reciente</span></div>
-            <div id="activity-feed"></div>
-          </div>
-          <div class="panel" id="panel-alerts">
-            <div class="panel-header">
-              <span class="panel-title">Alertas de stock</span>
-              <button class="link-btn" onclick="navigate('productos')">Ver todas</button>
-            </div>
-            <div id="stock-alerts"></div>
+          <h2 class="dash-welcome-title">Bienvenida a April Store</h2>
+          <p class="dash-welcome-sub">Comienza registrando tus productos, colaboradoras y ventas para ver el resumen aquí.</p>
+          <div class="dash-quick-links">
+            <button class="dash-quick-btn" onclick="navigate('productos')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>
+              Agregar producto
+            </button>
+            <button class="dash-quick-btn" onclick="navigate('colaboradores')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              Agregar colaboradora
+            </button>
+            <button class="dash-quick-btn" onclick="navigate('pos')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Ir al POS
+            </button>
+            <button class="dash-quick-btn" onclick="navigate('ventas')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              Ver ventas
+            </button>
           </div>
         </div>
       </section>
+
 
       <!-- ── PRODUCTOS ─────────────────────────────────── -->
       <section id="page-productos" class="page">
