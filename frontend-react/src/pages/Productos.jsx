@@ -1,0 +1,271 @@
+import { useState, useEffect } from 'react';
+import { Api } from '../services/api';
+import { Plus, Search, Edit2, Trash2, Package } from 'lucide-react';
+
+export default function Productos() {
+  const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [colaboradoras, setColaboradoras] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterTipo, setFilterTipo] = useState('');
+
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: '', sku: '', categoria_id: '', tipo: 'consignacion', colaborador_id: '',
+    precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: ''
+  });
+
+  useEffect(() => {
+    fetchDependencias();
+    fetchProductos();
+  }, []);
+
+  const fetchDependencias = async () => {
+    try {
+      const [cats, colabs] = await Promise.all([
+        Api.get('/categorias'),
+        Api.get('/colaboradores')
+      ]);
+      setCategorias(cats);
+      setColaboradoras(colabs);
+    } catch (err) {
+      console.error('Error fetching dependencias', err);
+    }
+  };
+
+  const fetchProductos = async () => {
+    try {
+      setLoading(true);
+      const res = await Api.get('/productos');
+      setProductos(res);
+    } catch (error) {
+      console.error('Error fetching productos', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      // Limpiar campos vacios de foreing keys
+      const dataToSave = { ...formData };
+      if (!dataToSave.colaborador_id) delete dataToSave.colaborador_id;
+      
+      if (isEditing) {
+        await Api.put(`/productos/${formData._id}`, dataToSave);
+      } else {
+        await Api.post('/productos', dataToSave);
+      }
+      setShowModal(false);
+      fetchProductos();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Eliminar este producto?')) return;
+    try {
+      await Api.delete(`/productos/${id}`);
+      fetchProductos();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const openEdit = (p) => {
+    setIsEditing(true);
+    setFormData({
+      ...p,
+      categoria_id: p.categoria_id?._id || p.categoria_id || '',
+      colaborador_id: p.colaborador_id?._id || p.colaborador_id || ''
+    });
+    setShowModal(true);
+  };
+
+  const openNew = () => {
+    setIsEditing(false);
+    setFormData({
+      nombre: '', sku: '', categoria_id: '', tipo: 'consignacion', colaborador_id: '',
+      precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: ''
+    });
+    setShowModal(true);
+  };
+
+  const filtered = productos.filter(p => {
+    const matchSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                       (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchTipo = filterTipo ? p.tipo === filterTipo : true;
+    return matchSearch && matchTipo;
+  });
+
+  return (
+    <div className="fade-in">
+      <div className="table-toolbar">
+        <div className="filter-row">
+          <div className="search-wrap">
+            <Search className="search-icon" size={16} />
+            <input 
+              type="text" 
+              className="search-input w-250" 
+              placeholder="Buscar producto o SKU..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select className="select-sm" value={filterTipo} onChange={e => setFilterTipo(e.target.value)}>
+            <option value="">Todos los tipos</option>
+            <option value="consignacion">Consignación</option>
+            <option value="propio">Propio</option>
+          </select>
+          <span className="count-label">{filtered.length} productos</span>
+        </div>
+        <div className="toolbar-right">
+          <button className="btn-primary" onClick={openNew}>
+            <Plus size={16}/> Nuevo Producto
+          </button>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>SKU</th>
+                <th>Categoría</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th>Origen</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px' }}>Cargando datos...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No se encontraron productos.</td></tr>
+              ) : (
+                filtered.map(p => (
+                  <tr key={p._id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="colab-card-av" style={{ width: '32px', height: '32px', background: 'var(--surface-3)', border: 'none', color: 'var(--ink-mid)' }}>
+                          <Package size={14} />
+                        </div>
+                        <div className="cell-primary" style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nombre}</div>
+                      </div>
+                    </td>
+                    <td><div className="cell-muted">{p.sku || '-'}</div></td>
+                    <td><div className="badge badge-neutral">{p.categoria_id?.nombre || 'General'}</div></td>
+                    <td>
+                      <div className="stock-cell">
+                        <span className={`stock-num ${p.stock_actual <= p.stock_minimo ? 'stock-critical' : ''}`}>{p.stock_actual}</span>
+                        <div className="stock-bar"><div className="stock-fill" style={{ width: `${Math.min(100, (p.stock_actual/p.stock_minimo)*50)}%`, background: p.stock_actual <= p.stock_minimo ? 'var(--danger)' : 'var(--success)' }}></div></div>
+                      </div>
+                    </td>
+                    <td><div className="cell-primary" style={{ color: 'var(--rose-deep)' }}>${p.precio_venta}</div></td>
+                    <td>
+                      {p.tipo === 'propio' ? <span className="badge badge-info">Propio</span> : <span className="badge badge-rose">Consigna</span>}
+                      <div style={{ fontSize: '10px', color: 'var(--ink-muted)', marginTop: '4px' }}>{p.colaborador_id?.nombre || 'Tienda'}</div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
+                        <button className="row-action-btn" onClick={() => openEdit(p)} title="Editar"><Edit2 size={14}/></button>
+                        <button className="row-action-btn" onClick={() => handleDelete(p._id)} style={{ color: 'var(--danger)' }} title="Eliminar"><Trash2 size={14} color="currentColor"/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay open">
+          <div className="modal modal-md open">
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title">{isEditing ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+                <p className="modal-sub">Completa la información del artículo en el catálogo.</p>
+              </div>
+              <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <form id="prodForm" onSubmit={handleSave}>
+                <div className="form-grid-2">
+                  <div className="form-field full-span">
+                    <label>Nombre *</label>
+                    <input type="text" required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} />
+                  </div>
+                  <div className="form-field">
+                    <label>SKU</label>
+                    <input type="text" value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} />
+                  </div>
+                  <div className="form-field">
+                    <label>Categoría *</label>
+                    <select required value={formData.categoria_id} onChange={e => setFormData({...formData, categoria_id: e.target.value})}>
+                      <option value="">Selecciona...</option>
+                      {categorias.map(c => <option key={c._id} value={c._id}>{c.nombre}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label>Tipo</label>
+                    <select value={formData.tipo} onChange={e => setFormData({...formData, tipo: e.target.value})}>
+                      <option value="consignacion">Consignación</option>
+                      <option value="propio">Propio</option>
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label>Colaboradora</label>
+                    <select value={formData.colaborador_id} onChange={e => setFormData({...formData, colaborador_id: e.target.value})}>
+                      <option value="">— Tienda propia —</option>
+                      {colaboradoras.map(c => <option key={c._id} value={c._id}>{c.nombre}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label>Precio Venta *</label>
+                    <div className="input-prefix-wrap">
+                      <span className="input-prefix">$</span>
+                      <input type="number" step="0.01" required value={formData.precio_venta} onChange={e => setFormData({...formData, precio_venta: e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="form-field">
+                    <label>Precio Costo</label>
+                    <div className="input-prefix-wrap">
+                      <span className="input-prefix">$</span>
+                      <input type="number" step="0.01" value={formData.precio_costo} onChange={e => setFormData({...formData, precio_costo: e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="form-field">
+                    <label>Stock</label>
+                    <input type="number" required value={formData.stock_actual} onChange={e => setFormData({...formData, stock_actual: e.target.value})} />
+                  </div>
+                  <div className="form-field">
+                    <label>Stock Mínimo</label>
+                    <input type="number" value={formData.stock_minimo} onChange={e => setFormData({...formData, stock_minimo: e.target.value})} />
+                  </div>
+                  <div className="form-field full-span">
+                    <label>Descripción</label>
+                    <textarea rows="2" value={formData.descripcion} onChange={e => setFormData({...formData, descripcion: e.target.value})}></textarea>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button form="prodForm" type="submit" className="btn-primary">Guardar Producto</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

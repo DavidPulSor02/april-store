@@ -1,0 +1,183 @@
+import { useState, useEffect } from 'react';
+import { Api } from '../services/api';
+import { Search, Eye } from 'lucide-react';
+import { format } from 'date-fns';
+
+export default function Ventas() {
+  const [ventas, setVentas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterMetodo, setFilterMetodo] = useState('');
+
+  const [showDetalle, setShowDetalle] = useState(false);
+  const [ventaActual, setVentaActual] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await Api.get('/ventas');
+      setVentas(res);
+    } catch (error) {
+      console.error('Error fetching ventas', error);
+      alert('Error cargando el historial de ventas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verDetalle = (v) => {
+    setVentaActual(v);
+    setShowDetalle(true);
+  };
+
+  const filtered = ventas.filter(v => {
+    const matchSearch = v.folio.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                       (v.usuario_id?.nombre && v.usuario_id.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchMetodo = filterMetodo ? v.metodo_pago === filterMetodo : true;
+    return matchSearch && matchMetodo;
+  });
+
+  const MetodoBadge = ({ m }) => {
+    const map = { efectivo: 'badge-success', transferencia: 'badge-info', tarjeta: 'badge-rose', mixto: 'badge-warning' };
+    return <span className={`badge ${map[m] || 'badge-neutral'}`}>{m}</span>;
+  };
+
+  const EstatusBadge = ({ e }) => {
+    const map = { completada: 'badge-success', cancelada: 'badge-danger', pendiente: 'badge-warning' };
+    return <span className={`badge ${map[e] || 'badge-neutral'}`}>{e || 'completada'}</span>;
+  };
+
+  return (
+    <div className="fade-in">
+      <div className="table-toolbar">
+        <div className="filter-row">
+          <div className="search-wrap">
+            <Search className="search-icon" size={16} />
+            <input 
+              type="text" 
+              className="search-input w-250" 
+              placeholder="Buscar por folio o usuario..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select className="select-sm" value={filterMetodo} onChange={e => setFilterMetodo(e.target.value)}>
+            <option value="">Todos los métodos</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+          <span className="count-label">{filtered.length} ventas</span>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Fecha</th>
+                <th>Usuario (Caja)</th>
+                <th>Total</th>
+                <th>Método</th>
+                <th>Estado</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px' }}>Cargando datos...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No se encontraron ventas registradas.</td></tr>
+              ) : (
+                filtered.map(v => (
+                  <tr key={v._id}>
+                    <td><div className="cell-primary">{v.folio}</div></td>
+                    <td>{v.fecha ? format(new Date(v.fecha), 'dd/MM/yyyy HH:mm') : '-'}</td>
+                    <td>{v.usuario_id?.nombre || 'Administrador'}</td>
+                    <td><div className="cell-primary" style={{ color: 'var(--rose-deep)' }}>${v.total?.toFixed(2) || '0.00'}</div></td>
+                    <td><MetodoBadge m={v.metodo_pago} /></td>
+                    <td><EstatusBadge e={v.estatus} /></td>
+                    <td>
+                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <button className="row-action-btn" onClick={() => verDetalle(v)} title="Ver Detalle"><Eye size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showDetalle && ventaActual && (
+        <div className="modal-overlay open">
+          <div className="modal modal-md open">
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title">Detalle de Venta</h3>
+                <p className="modal-sub">Folio: {ventaActual.folio}</p>
+              </div>
+              <button className="modal-close" onClick={() => setShowDetalle(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', padding: '16px', background: 'var(--surface-2)', borderRadius: '8px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>Total Cobrado</div>
+                  <div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--ink-dark)' }}>${ventaActual.total?.toFixed(2) || '0.00'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>Método de Pago</div>
+                  <div style={{ marginTop: '4px' }}><MetodoBadge m={ventaActual.metodo_pago} /></div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>Fecha</div>
+                  <div style={{ fontWeight: 500 }}>{ventaActual.fecha ? format(new Date(ventaActual.fecha), 'dd/MM/yyyy HH:mm') : '-'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>Cajero</div>
+                  <div style={{ fontWeight: 500 }}>{ventaActual.usuario_id?.nombre || 'Administrador'}</div>
+                </div>
+              </div>
+
+              <h4 style={{ fontSize: '14px', marginBottom: '12px', fontWeight: 600 }}>Artículos Vendidos</h4>
+              <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead style={{ background: 'var(--surface-2)' }}>
+                    <tr>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500, color: 'var(--ink-muted)' }}>Producto</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 500, color: 'var(--ink-muted)' }}>Cantidad</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 500, color: 'var(--ink-muted)' }}>Precio U.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ventaActual.items && ventaActual.items.length > 0 ? (
+                      ventaActual.items.map((it, idx) => (
+                        <tr key={idx} style={{ borderTop: '1px solid var(--border)' }}>
+                          <td style={{ padding: '8px 12px' }}>{it.producto_id?.nombre || 'Producto eliminado'}</td>
+                          <td style={{ padding: '8px 12px', textAlign: 'right' }}>{it.cantidad}</td>
+                          <td style={{ padding: '8px 12px', textAlign: 'right' }}>${it.precio_unitario?.toFixed(2) || '0.00'}</td>
+                        </tr>
+                      ))
+                    ) : (
+                       <tr><td colSpan="3" style={{ padding: '16px', textAlign: 'center', color: 'var(--ink-muted)' }}>Sin detalles de artículos</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-primary" onClick={() => setShowDetalle(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
