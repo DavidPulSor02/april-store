@@ -535,21 +535,24 @@ async function loadConsignaciones() {
   try {
     const res = await Api.get('/api/consignaciones');
     const data = res.data || [];
-
-    tbody.innerHTML = data.length ? data.map(c => `
-      <tr>
-        <td class="cell-primary">${c.producto_id?.nombre || '—'}</td>
-        <td>${c.colaborador_id?.nombre || '—'}</td>
-        <td>${c.cantidad_ingresada}</td>
-        <td><strong>${c.cantidad_disponible}</strong></td>
-        <td>${c.cantidad_vendida}</td>
-        <td>${estatusBadge(c.estatus)}</td>
-        <td>${fmtD(c.fecha_ingreso)}</td>
-      </tr>`).join('') : emptyRow(7, 'Sin consignaciones activas');
+    State.cacheConsignaciones = data;
+    renderConsigRows(data);
   } catch (err) {
     console.error('Error cargando consignaciones:', err);
     tbody.innerHTML = '<tr><td colspan="7" class="error-state">Error al cargar datos</td></tr>';
   }
+}
+
+function filterConsigLocal(q) {
+  let data = State.cacheConsignaciones || [];
+  if (q.trim()) {
+    const lq = q.toLowerCase();
+    data = data.filter(c =>
+      (c.producto_id?.nombre && c.producto_id.nombre.toLowerCase().includes(lq)) ||
+      (c.colaborador_id?.nombre && c.colaborador_id.nombre.toLowerCase().includes(lq))
+    );
+  }
+  renderConsigRows(data);
 }
 
 // ── PAGOS ─────────────────────────────────────────────────
