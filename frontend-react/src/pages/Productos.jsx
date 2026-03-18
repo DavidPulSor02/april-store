@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Api } from '../services/api';
-import { Plus, Search, Edit2, Trash2, Package } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Package, Printer, Barcode as BarcodeIcon } from 'lucide-react';
+import JsBarcode from 'jsbarcode';
+import { useRef } from 'react';
 
 export default function Productos() {
   const [productos, setProductos] = useState([]);
@@ -17,6 +17,42 @@ export default function Productos() {
     nombre: '', sku: '', categoria_id: '', tipo: 'consignacion', colaborador_id: '',
     precio_venta: '', precio_costo: '', stock_actual: 0, stock_minimo: 5, descripcion: '', imagen_url: ''
   });
+
+  const barcodeRef = useRef(null);
+
+  useEffect(() => {
+    if (showModal && formData.sku) {
+      setTimeout(() => {
+        if (barcodeRef.current) {
+          JsBarcode(barcodeRef.current, formData.sku, {
+            format: "CODE128",
+            width: 2,
+            height: 50,
+            displayValue: true
+          });
+        }
+      }, 100);
+    }
+  }, [showModal, formData.sku]);
+
+  const printBarcode = () => {
+    const canvas = barcodeRef.current;
+    if (!canvas) return;
+    const windowPrint = window.open('', '', 'width=600,height=400');
+    windowPrint.document.write('<html><head><title>Imprimir Código de Barras</title>');
+    windowPrint.document.write('<style>body{display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;font-family:sans-serif;} img{width:300px;}</style>');
+    windowPrint.document.write('</head><body>');
+    windowPrint.document.write(`<h2>${formData.nombre}</h2>`);
+    windowPrint.document.write(`<img src="${canvas.toDataURL()}"/>`);
+    windowPrint.document.write(`<p>SKU: ${formData.sku}</p>`);
+    windowPrint.document.write('</body></html>');
+    windowPrint.document.close();
+    windowPrint.focus();
+    setTimeout(() => {
+      windowPrint.print();
+      windowPrint.close();
+    }, 500);
+  };
 
   useEffect(() => {
     fetchDependencias();
@@ -246,10 +282,21 @@ export default function Productos() {
                     <label>Nombre *</label>
                     <input type="text" required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} style={{ marginBottom: '12px' }} />
                     
-                    <label>SKU</label>
-                    <input type="text" value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} />
+                    <label>SKU (Auto-generado si queda vacío)</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" placeholder="Ej. LUNA-001" value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} style={{ flex: 1 }} />
+                    </div>
                   </div>
                 </div>
+
+                {formData.sku && (
+                  <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '8px', marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid #eee' }}>
+                    <canvas ref={barcodeRef}></canvas>
+                    <button type="button" className="btn-ghost" style={{ fontSize: '11px', marginTop: '4px' }} onClick={printBarcode}>
+                      <Printer size={12} /> Imprimir Etiqueta
+                    </button>
+                  </div>
+                )}
 
                 <div className="form-grid-2">
                   <div className="form-field">

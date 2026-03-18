@@ -41,8 +41,33 @@ router.get('/:id', auth, async (req, res) => {
 
 // POST /api/productos
 router.post('/', auth, async (req, res) => {
-  const p = await Producto.create(req.body);
-  res.status(201).json({ success: true, data: p });
+  try {
+    const data = { ...req.body };
+    
+    // Generar SKU si no viene uno
+    if (!data.sku || data.sku.trim() === '') {
+      let prefix = 'PRO'; // Default
+      if (data.tipo === 'propio') {
+        prefix = 'APR'; // April Own
+      } else if (data.colaborador_id) {
+        const { Colaborador } = require('../models');
+        const colab = await Colaborador.findById(data.colaborador_id);
+        if (colab) {
+          prefix = colab.nombre.substring(0, 3).toUpperCase();
+        }
+      }
+      
+      // Generar sufijo único (Timestamp o Random)
+      const suffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+      data.sku = `${prefix}-${suffix}`;
+    }
+
+    const p = await Producto.create(data);
+    res.status(201).json({ success: true, data: p });
+  } catch (err) {
+    console.error('Error al crear producto:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // PUT /api/productos/:id
