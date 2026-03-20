@@ -82,9 +82,9 @@ export default function Sidebar({ user }) {
             <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
               <Users className="nav-icon" /> Usuarios (Cajeras)
             </NavLink>
-            <button className="nav-item">
+            <NavLink to="/configuracion" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
               <Settings className="nav-icon" /> Configuración
-            </button>
+            </NavLink>
           </div>
         )}
       </nav>

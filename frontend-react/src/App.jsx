@@ -13,6 +13,8 @@ import Pagos from './pages/Pagos';
 import Contabilidad from './pages/Contabilidad';
 import Usuarios from './pages/Usuarios';
 
+import Configuracion from './pages/Configuracion';
+
 // Placeholders temporales
 const Placeholder = ({ title }) => <div style={{ padding: '24px' }}><h2>{title} en construcción</h2><p>Este módulo será portado a React muy pronto.</p></div>;
 
@@ -35,6 +37,7 @@ function App() {
           <Route path="/pagos" element={<Pagos />} />
           <Route path="/contabilidad" element={<Contabilidad />} />
           <Route path="/usuarios" element={<Usuarios />} />
+          <Route path="/configuracion" element={<Configuracion />} />
         </Route>
       </Route>
 

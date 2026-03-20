@@ -93,7 +93,9 @@ ctRouter.get('/', auth, async (req, res) => {
 });
 
 ctRouter.post('/', auth, async (req, res) => {
-  const m = await MovimientoContable.create({ ...req.body, usuario_id: req.usuario.id });
+  const data = { ...req.body, usuario_id: req.usuario.id };
+  if (data.saldo_resultante === undefined) data.saldo_resultante = 0;
+  const m = await MovimientoContable.create(data);
   res.status(201).json({ success: true, data: m });
 });
 
