@@ -12,6 +12,13 @@ export default function Ventas() {
   const [showDetalle, setShowDetalle] = useState(false);
   const [ventaActual, setVentaActual] = useState(null);
 
+  // Estados para el reporte de email
+  const [showReportParams, setShowReportParams] = useState(false);
+  const [reportTipo, setReportTipo] = useState('mes');
+  const [reportMesAnno, setReportMesAnno] = useState('');
+  const [reportQuincena, setReportQuincena] = useState(1);
+  const [sendingReport, setSendingReport] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -39,6 +46,28 @@ export default function Ventas() {
     }
   };
 
+  const handleSendReport = async () => {
+    if (!reportMesAnno) return alert('Por favor, selecciona un mes y año.');
+    try {
+      setSendingReport(true);
+      const res = await Api.post('/ventas/reporte-email', {
+        tipo: reportTipo,
+        mesAnno: reportMesAnno,
+        numQuincena: reportQuincena
+      });
+      if (res.success) {
+        alert('✅ ¡Reporte enviado exitosamente al correo del administrador!');
+        setShowReportParams(false);
+      } else {
+        alert(res.message || 'Error al enviar reporte');
+      }
+    } catch (e) {
+      alert(e.message || 'Error de conexión');
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
   const filtered = ventas.filter(v => {
     const matchSearch = v.folio.toLowerCase().includes(searchTerm.toLowerCase()) || 
                        (v.usuario_id?.nombre && v.usuario_id.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -58,7 +87,7 @@ export default function Ventas() {
 
   return (
     <div className="fade-in">
-      <div className="table-toolbar">
+      <div className="table-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="filter-row">
           <div className="search-wrap">
             <Search className="search-icon" size={16} />
@@ -77,6 +106,11 @@ export default function Ventas() {
             <option value="transferencia">Transferencia</option>
           </select>
           <span className="count-label">{filtered.length} ventas</span>
+        </div>
+        <div className="toolbar-right">
+          <button className="btn-primary" onClick={() => setShowReportParams(true)}>
+            📊 Generar Reporte
+          </button>
         </div>
       </div>
 
@@ -179,6 +213,48 @@ export default function Ventas() {
             </div>
             <div className="modal-footer">
               <button className="btn-primary" onClick={() => setShowDetalle(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReportParams && (
+        <div className="modal-overlay open">
+          <div className="modal modal-md open">
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title">Reporte de Ventas al Administrador</h3>
+                <p className="modal-sub">El resumen se enviará por correo automáticamente.</p>
+              </div>
+              <button className="modal-close" onClick={() => setShowReportParams(false)}>&times;</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="form-field">
+                <label>Organizar por:</label>
+                <select value={reportTipo} onChange={e => setReportTipo(e.target.value)}>
+                  <option value="mes">Mensual</option>
+                  <option value="quincena">Quincenal</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Mes y Año de la consulta</label>
+                <input type="month" value={reportMesAnno} onChange={e => setReportMesAnno(e.target.value)} />
+              </div>
+              {reportTipo === 'quincena' && (
+                <div className="form-field">
+                  <label>Quincena Específica</label>
+                  <select value={reportQuincena} onChange={e => setReportQuincena(Number(e.target.value))}>
+                    <option value={1}>1ra Quincena (Días 1 al 15)</option>
+                    <option value={2}>2da Quincena (Del 16 a Fin de mes)</option>
+                  </select>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={() => setShowReportParams(false)}>Cancelar</button>
+              <button className="btn-primary" onClick={handleSendReport} disabled={sendingReport}>
+                {sendingReport ? 'Generando...' : '📩 Enviar Reporte'}
+              </button>
             </div>
           </div>
         </div>

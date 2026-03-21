@@ -140,4 +140,62 @@ router.patch('/:id/cancelar', auth, async (req, res) => {
   }
 });
 
+// POST /api/ventas/reporte-email
+router.post('/reporte-email', auth, async (req, res) => {
+  try {
+    const { tipo, mesAnno, numQuincena } = req.body;
+    if (!tipo || !mesAnno) return res.status(400).json({ success: false, message: 'Parametros requeridos incompletos' });
+
+    const [year, month] = mesAnno.split('-').map(Number);
+    let fechaInicio, fechaFin, etiquetaPeriodo;
+
+    if (tipo === 'mes') {
+      fechaInicio = new Date(year, month - 1, 1);
+      fechaFin = new Date(year, month, 0, 23, 59, 59, 999);
+      etiquetaPeriodo = `Mes de ${fechaInicio.toLocaleString('es-MX', { month: 'long' })} ${year}`;
+    } else if (tipo === 'quincena') {
+      if (numQuincena === 1) {
+        fechaInicio = new Date(year, month - 1, 1);
+        fechaFin = new Date(year, month - 1, 15, 23, 59, 59, 999);
+        etiquetaPeriodo = `1ra Quincena de ${fechaInicio.toLocaleString('es-MX', { month: 'long' })} ${year}`;
+      } else {
+        fechaInicio = new Date(year, month - 1, 16);
+        fechaFin = new Date(year, month, 0, 23, 59, 59, 999);
+        etiquetaPeriodo = `2da Quincena de ${fechaInicio.toLocaleString('es-MX', { month: 'long' })} ${year}`;
+      }
+    } else {
+      return res.status(400).json({ success: false, message: 'Tipo no valido' });
+    }
+
+    const ventas = await Venta.find({
+      fecha: { $gte: fechaInicio, $lte: fechaFin },
+      estatus: 'completada'
+    });
+
+    const datos = {
+      total_ventas: 0,
+      num_ventas: ventas.length,
+      total_efectivo: 0,
+      total_tarjeta: 0,
+      total_transferencia: 0
+    };
+
+    ventas.forEach(v => {
+      datos.total_ventas += v.total;
+      if (v.metodo_pago === 'efectivo') datos.total_efectivo += v.total;
+      else if (v.metodo_pago === 'tarjeta') datos.total_tarjeta += v.total;
+      else if (v.metodo_pago === 'transferencia') datos.total_transferencia += v.total;
+      else datos.total_efectivo += v.total; // Default to efectivo for mixed/etc to not break math easily
+    });
+
+    const { enviarReporteVentas } = require('../services/emailService');
+    await enviarReporteVentas(datos, etiquetaPeriodo);
+
+    res.json({ success: true, message: 'Reporte enviado por correo a los administradores.' });
+  } catch (error) {
+    console.error('Error generando reporte de ventas', error);
+    res.status(500).json({ success: false, message: 'Error interno al generar reporte' });
+  }
+});
+
 module.exports = router;
