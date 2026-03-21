@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
+import aprilLogo from '../assets/april_logo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -37,11 +38,8 @@ export default function Login() {
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="var(--rose)"/>
-            <path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="white"/>
-          </svg>
-          <span className="login-brand">April Store</span>
+          <img src={aprilLogo} alt="April Store" width="40" height="40" style={{ borderRadius: '50%' }} />
+          <span className="login-brand" style={{ fontSize: '26px' }}>April Store</span>
         </div>
         <h1 className="login-title">Bienvenida de vuelta</h1>
         <p className="login-sub">Ingresa tus credenciales para continuar</p>

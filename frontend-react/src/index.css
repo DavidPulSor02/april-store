@@ -1404,3 +1404,43 @@ textarea { resize: vertical; min-height: 80px; }
   margin-top: 12px;
 }
 .cambio-box strong { color: var(--success); font-size: 18px; }
+
+/* ── LOADING ANIMATION ──────────────────────────────────── */
+.april-loader-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--rose-mist);
+  background-image: radial-gradient(ellipse 60% 50% at 70% 30%, rgba(200,99,122,.12) 0%, transparent 70%);
+}
+
+.april-loader-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  animation: pulseLogo 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(159, 18, 57, 0.2);
+}
+
+@keyframes pulseLogo {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(159, 18, 57, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(159, 18, 57, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(159, 18, 57, 0); }
+}
+
+.april-loader-text {
+  margin-top: 24px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--rose-deep);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: fadeText 2s infinite;
+}
+
+@keyframes fadeText {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}

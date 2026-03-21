@@ -12,6 +12,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import aprilLogo from '../assets/april_logo.png';
 
 export default function Sidebar({ user }) {
   const { logout } = useAuth();
@@ -21,10 +22,7 @@ export default function Sidebar({ user }) {
     <aside className="sidebar">
       <div className="sidebar-top">
         <div className="sidebar-brand">
-          <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-            <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="var(--rose)"/>
-            <path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="white"/>
-          </svg>
+          <img src={aprilLogo} alt="April Store" width="36" height="36" style={{ borderRadius: '50%' }} />
           <div>
             <div className="brand-name">April Store</div>
             <div className="brand-sub">Management</div>
