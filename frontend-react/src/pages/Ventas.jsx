@@ -18,6 +18,7 @@ export default function Ventas() {
   const [reportMesAnno, setReportMesAnno] = useState('');
   const [reportQuincena, setReportQuincena] = useState(1);
   const [sendingReport, setSendingReport] = useState(false);
+  const [reportWhatsappText, setReportWhatsappText] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -50,16 +51,15 @@ export default function Ventas() {
     if (!reportMesAnno) return alert('Por favor, selecciona un mes y año.');
     try {
       setSendingReport(true);
-      const res = await Api.post('/ventas/reporte-email', {
+      const res = await Api.post('/ventas/generar-reporte', {
         tipo: reportTipo,
         mesAnno: reportMesAnno,
         numQuincena: reportQuincena
       });
-      if (res.success) {
-        alert('✅ ¡Reporte enviado exitosamente al correo del administrador!');
-        setShowReportParams(false);
+      if (res.success && res.whatsappText) {
+        setReportWhatsappText(res.whatsappText);
       } else {
-        alert(res.message || 'Error al enviar reporte');
+        alert(res.message || 'Error al generar reporte');
       }
     } catch (e) {
       alert(e.message || 'Error de conexión');
@@ -228,33 +228,53 @@ export default function Ventas() {
               </div>
               <button className="modal-close" onClick={() => setShowReportParams(false)}>&times;</button>
             </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-field">
-                <label>Organizar por:</label>
-                <select value={reportTipo} onChange={e => setReportTipo(e.target.value)}>
-                  <option value="mes">Mensual</option>
-                  <option value="quincena">Quincenal</option>
-                </select>
-              </div>
-              <div className="form-field">
-                <label>Mes y Año de la consulta</label>
-                <input type="month" value={reportMesAnno} onChange={e => setReportMesAnno(e.target.value)} />
-              </div>
-              {reportTipo === 'quincena' && (
-                <div className="form-field">
-                  <label>Quincena Específica</label>
-                  <select value={reportQuincena} onChange={e => setReportQuincena(Number(e.target.value))}>
-                    <option value={1}>1ra Quincena (Días 1 al 15)</option>
-                    <option value={2}>2da Quincena (Del 16 a Fin de mes)</option>
-                  </select>
+            <div className="modal-body">
+              {reportWhatsappText ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <p style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 500, color: 'var(--ink-dark)' }}>
+                    ¡Reporte Listo!<br/><span style={{ fontSize: '14px', fontWeight: 'normal', color: 'var(--ink-muted)' }}>Elige a quién enviarlo mágicamente:</span>
+                  </p>
+                  <a href={`https://wa.me/522711272780?text=${encodeURIComponent(reportWhatsappText)}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ textAlign: 'center', textDecoration: 'none', background: '#25D366', color: '#fff', border: 'none', display: 'block', padding: '12px', fontSize: '15px' }}>
+                    📲 WhatsApp a 2711272780
+                  </a>
+                  <a href={`https://wa.me/522711077208?text=${encodeURIComponent(reportWhatsappText)}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ textAlign: 'center', textDecoration: 'none', background: '#25D366', color: '#fff', border: 'none', display: 'block', padding: '12px', fontSize: '15px' }}>
+                    📲 WhatsApp a 2711077208
+                  </a>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="form-field">
+                    <label>Organizar por:</label>
+                    <select value={reportTipo} onChange={e => setReportTipo(e.target.value)}>
+                      <option value="mes">Mensual</option>
+                      <option value="quincena">Quincenal</option>
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label>Mes y Año de la consulta</label>
+                    <input type="month" value={reportMesAnno} onChange={e => setReportMesAnno(e.target.value)} />
+                  </div>
+                  {reportTipo === 'quincena' && (
+                    <div className="form-field">
+                      <label>Quincena Específica</label>
+                      <select value={reportQuincena} onChange={e => setReportQuincena(Number(e.target.value))}>
+                        <option value={1}>1ra Quincena (Días 1 al 15)</option>
+                        <option value={2}>2da Quincena (Del 16 a Fin de mes)</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn-ghost" onClick={() => setShowReportParams(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={handleSendReport} disabled={sendingReport}>
-                {sendingReport ? 'Generando...' : '📩 Enviar Reporte'}
+              <button className="btn-ghost" onClick={() => { setShowReportParams(false); setReportWhatsappText(''); }}>
+                {reportWhatsappText ? 'Cerrar' : 'Cancelar'}
               </button>
+              {!reportWhatsappText && (
+                <button className="btn-primary" onClick={handleSendReport} disabled={sendingReport}>
+                  {sendingReport ? 'Generando...' : '📊 Generar Reporte Whatsapp'}
+                </button>
+              )}
             </div>
           </div>
         </div>

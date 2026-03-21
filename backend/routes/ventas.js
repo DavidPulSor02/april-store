@@ -191,27 +191,32 @@ router.patch('/:id/cancelar', auth, async (req, res) => {
   }
 });
 
-// POST /api/ventas/reporte-email
-router.post('/reporte-email', auth, async (req, res) => {
+// POST /api/ventas/generar-reporte
+router.post('/generar-reporte', auth, async (req, res) => {
   try {
     const { tipo, mesAnno, numQuincena } = req.body;
     if (!tipo || !mesAnno) return res.status(400).json({ success: false, message: 'Parametros requeridos incompletos' });
 
     const [year, month] = mesAnno.split('-').map(Number);
     let fechaInicio, fechaFin, etiquetaPeriodo;
+    
+    // Forzamos límites interhorarios asumiendo que el cliente pide las horas relativas del servidor
+    const Smonth = String(month).padStart(2, '0');
 
     if (tipo === 'mes') {
-      fechaInicio = new Date(year, month - 1, 1);
-      fechaFin = new Date(year, month, 0, 23, 59, 59, 999);
+      const endDay = new Date(year, month, 0).getDate();
+      fechaInicio = new Date(`${year}-${Smonth}-01T00:00:00.000-06:00`); // UTC-6 para México Centro
+      fechaFin    = new Date(`${year}-${Smonth}-${endDay}T23:59:59.999-06:00`);
       etiquetaPeriodo = `Mes de ${fechaInicio.toLocaleString('es-MX', { month: 'long' })} ${year}`;
     } else if (tipo === 'quincena') {
       if (numQuincena === 1) {
-        fechaInicio = new Date(year, month - 1, 1);
-        fechaFin = new Date(year, month - 1, 15, 23, 59, 59, 999);
+        fechaInicio = new Date(`${year}-${Smonth}-01T00:00:00.000-06:00`);
+        fechaFin    = new Date(`${year}-${Smonth}-15T23:59:59.999-06:00`);
         etiquetaPeriodo = `1ra Quincena de ${fechaInicio.toLocaleString('es-MX', { month: 'long' })} ${year}`;
       } else {
-        fechaInicio = new Date(year, month - 1, 16);
-        fechaFin = new Date(year, month, 0, 23, 59, 59, 999);
+        const endDay = new Date(year, month, 0).getDate();
+        fechaInicio = new Date(`${year}-${Smonth}-16T00:00:00.000-06:00`);
+        fechaFin    = new Date(`${year}-${Smonth}-${endDay}T23:59:59.999-06:00`);
         etiquetaPeriodo = `2da Quincena de ${fechaInicio.toLocaleString('es-MX', { month: 'long' })} ${year}`;
       }
     } else {
@@ -223,26 +228,31 @@ router.post('/reporte-email', auth, async (req, res) => {
       estatus: 'completada'
     });
 
-    const datos = {
-      total_ventas: 0,
-      num_ventas: ventas.length,
-      total_efectivo: 0,
-      total_tarjeta: 0,
-      total_transferencia: 0
-    };
+    let totalVentas = 0, totalEfectivo = 0, totalTarjeta = 0, totalTransferencia = 0;
 
     ventas.forEach(v => {
-      datos.total_ventas += v.total;
-      if (v.metodo_pago === 'efectivo') datos.total_efectivo += v.total;
-      else if (v.metodo_pago === 'tarjeta') datos.total_tarjeta += v.total;
-      else if (v.metodo_pago === 'transferencia') datos.total_transferencia += v.total;
-      else datos.total_efectivo += v.total; // Default to efectivo for mixed/etc to not break math easily
+      totalVentas += v.total;
+      if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
+      else if (v.metodo_pago === 'tarjeta') totalTarjeta += v.total;
+      else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
+      else totalEfectivo += v.total; // Default (mixto) asimilado
     });
 
-    const { enviarReporteVentas } = require('../services/emailService');
-    await enviarReporteVentas(datos, etiquetaPeriodo);
+    const whatsappText = `📊 *Reporte de Ventas - April Store* 📊
 
-    res.json({ success: true, message: 'Reporte enviado por correo a los administradores.' });
+*Periodo Consultado:* ${etiquetaPeriodo}
+
+💰 *Ingresos Totales:* $${Number(totalVentas || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+📝 *Total de transacciones:* ${ventas.length}
+
+*Desglose por método de pago:*
+💵 Efectivo: $${Number(totalEfectivo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+💳 Tarjeta: $${Number(totalTarjeta || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+🏦 Transferencia: $${Number(totalTransferencia || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+
+_Reporte automático generado el ${new Date().toLocaleString('es-MX')}_`;
+
+    res.json({ success: true, message: 'Reporte generado', whatsappText });
   } catch (error) {
     console.error('Error generando reporte de ventas', error);
     res.status(500).json({ success: false, message: 'Error interno al generar reporte' });
