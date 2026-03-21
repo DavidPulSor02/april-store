@@ -1,7 +1,7 @@
 const router   = require('express').Router();
 const mongoose = require('mongoose');
 const auth     = require('../middleware/auth');
-const { Venta, VentaItem, Producto, MovimientoContable } = require('../models');
+const { Venta, VentaItem, Producto, MovimientoContable, Consignacion } = require('../models');
 
 // GET /api/ventas
 router.get('/', auth, async (req, res) => {
@@ -64,12 +64,37 @@ router.post('/', auth, async (req, res) => {
         comision_tienda:      +(itemSubtotal * (1 - (item.porcentaje_comision ?? 70) / 100)).toFixed(2),
       });
 
-      // Descontar stock
+      // Descontar stock general del producto
       await Producto.findByIdAndUpdate(
         producto._id,
         { $inc: { stock_actual: -item.cantidad } },
         { session }
       );
+
+      // Descontar stock de consignaciones si aplica
+      if (producto.colaborador_id) {
+        let cantRestante = item.cantidad;
+        const consignaciones = await Consignacion.find({
+          producto_id: producto._id,
+          estatus: 'abierta',
+          cantidad_disponible: { $gt: 0 }
+        }).sort({ fecha_ingreso: 1 }).session(session);
+
+        for (let consig of consignaciones) {
+          if (cantRestante <= 0) break;
+          const aDescontar = Math.min(consig.cantidad_disponible, cantRestante);
+          
+          consig.cantidad_disponible -= aDescontar;
+          consig.cantidad_vendida += aDescontar;
+          
+          if (consig.cantidad_disponible === 0) {
+            consig.estatus = 'cerrada';
+            consig.fecha_cierre = new Date();
+          }
+          await consig.save({ session });
+          cantRestante -= aDescontar;
+        }
+      }
     }
 
     const total = +(subtotal - descuento).toFixed(2);
@@ -128,6 +153,32 @@ router.patch('/:id/cancelar', auth, async (req, res) => {
     const items = await VentaItem.find({ venta_id: venta._id }).session(session);
     for (const item of items) {
       await Producto.findByIdAndUpdate(item.producto_id, { $inc: { stock_actual: item.cantidad } }, { session });
+
+      if (item.colaborador_id) {
+        let cantAReintegrar = item.cantidad;
+        // Reintegrar a consignaciones recientes que tengan algo vendido
+        const consignaciones = await Consignacion.find({
+          producto_id: item.producto_id
+        }).sort({ fecha_ingreso: -1 }).session(session); // del más reciente al más antiguo
+
+        for (let consig of consignaciones) {
+          if (cantAReintegrar <= 0) break;
+          const espacio = consig.cantidad_vendida; 
+          if (espacio > 0) {
+            const aRestaurar = Math.min(espacio, cantAReintegrar);
+            consig.cantidad_vendida -= aRestaurar;
+            consig.cantidad_disponible += aRestaurar;
+            
+            if (consig.estatus === 'cerrada' && consig.cantidad_disponible > 0) {
+              consig.estatus = 'abierta';
+              consig.fecha_cierre = null;
+            }
+            
+            await consig.save({ session });
+            cantAReintegrar -= aRestaurar;
+          }
+        }
+      }
     }
 
     await session.commitTransaction();
