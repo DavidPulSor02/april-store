@@ -8,7 +8,9 @@ export default function ProtectedRoute() {
   if (loading) {
     return (
       <div className="april-loader-container">
-        <img src={aprilLogo} alt="Cargando April Store" className="april-loader-logo" />
+        <div className="april-loader-logo-wrapper">
+          <img src={aprilLogo} alt="Cargando April Store" className="april-loader-logo" />
+        </div>
         <div className="april-loader-text">Cargando...</div>
       </div>
     );

@@ -38,16 +38,27 @@ export default function Login() {
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo">
-          <img 
-            src={aprilLogo} 
-            alt="April Store" 
-            style={{ 
-              width: '40px', 
-              height: '40px', 
-              objectFit: 'cover', 
-              borderRadius: '50%' 
-            }} 
-          />
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            borderRadius: '50%', 
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#fff'
+          }}>
+            <img 
+              src={aprilLogo} 
+              alt="April Store" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover', 
+                transform: 'scale(2.2) translateY(-2%)' 
+              }} 
+            />
+          </div>
           <span className="login-brand" style={{ fontSize: '26px' }}>April Store</span>
         </div>
         <h1 className="login-title">Bienvenida de vuelta</h1>

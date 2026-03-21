@@ -21,18 +21,26 @@ export default function Sidebar({ user }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-top" style={{ display: 'flex', justifyContent: 'center', padding: '32px 18px 28px' }}>
-        <div className="sidebar-brand" style={{ justifyContent: 'center', width: '100%' }}>
+        <div style={{ 
+          width: '110px', 
+          height: '110px', 
+          borderRadius: '50%', 
+          overflow: 'hidden', 
+          boxShadow: '0 8px 24px -4px rgba(159, 18, 57, 0.25)', 
+          border: '2px solid var(--rose-pale)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#fff'
+        }}>
           <img 
             src={aprilLogo} 
             alt="April Store" 
             style={{ 
-              width: '110px',
-              height: '110px',
+              width: '100%',
+              height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center',
-              borderRadius: '50%', 
-              boxShadow: '0 8px 24px -4px rgba(159, 18, 57, 0.25)',
-              border: '2px solid var(--rose-pale)'
+              transform: 'scale(2.2) translateY(-2%)'
             }} 
           />
         </div>
