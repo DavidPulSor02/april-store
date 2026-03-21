@@ -25,6 +25,7 @@ const colaboradorSchema = new Schema({
   nombre:              { type: String, required: true, trim: true },
   telefono:            { type: String, trim: true },
   email:               { type: String, lowercase: true, trim: true },
+  direccion:           { type: String, trim: true },
   especialidad:        { type: String, trim: true },
   porcentaje_comision: { type: Number, default: 70, min: 0, max: 100 },
   banco:               { type: String },

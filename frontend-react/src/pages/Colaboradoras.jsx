@@ -9,7 +9,7 @@ export default function Colaboradoras() {
 
   // Estados Modal
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ nombre: '', email: '', telefono: '', direccion: '', porcentajeDefault: 50 });
+  const [formData, setFormData] = useState({ nombre: '', email: '', telefono: '', direccion: '', porcentaje_comision: 50 });
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function Colaboradoras() {
 
   const openNew = () => {
     setIsEditing(false);
-    setFormData({ nombre: '', email: '', telefono: '', direccion: '', porcentajeDefault: 50 });
+    setFormData({ nombre: '', email: '', telefono: '', direccion: '', porcentaje_comision: 50 });
     setShowModal(true);
   };
 
@@ -135,7 +135,7 @@ export default function Colaboradoras() {
                       </div>
                     </td>
                     <td>
-                      <div className="badge badge-rose">{c.porcentajeDefault}%</div>
+                      <div className="badge badge-rose">{c.porcentaje_comision}%</div>
                     </td>
                     <td>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
@@ -186,7 +186,7 @@ export default function Colaboradoras() {
                   </div>
                   <div className="form-field">
                     <label>Porcentaje Comisión (%)</label>
-                    <input type="number" required min="1" max="100" value={formData.porcentajeDefault} onChange={e => setFormData({...formData, porcentajeDefault: e.target.value})} />
+                    <input type="number" required min="1" max="100" value={formData.porcentaje_comision} onChange={e => setFormData({...formData, porcentaje_comision: Number(e.target.value)})} />
                   </div>
                 </div>
               </form>
