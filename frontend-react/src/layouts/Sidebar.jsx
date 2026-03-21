@@ -20,13 +20,19 @@ export default function Sidebar({ user }) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-top">
-        <div className="sidebar-brand">
-          <img src={aprilLogo} alt="April Store" width="36" height="36" style={{ borderRadius: '50%' }} />
-          <div>
-            <div className="brand-name">April Store</div>
-            <div className="brand-sub">Management</div>
-          </div>
+      <div className="sidebar-top" style={{ display: 'flex', justifyContent: 'center', padding: '32px 18px 28px' }}>
+        <div className="sidebar-brand" style={{ justifyContent: 'center', width: '100%' }}>
+          <img 
+            src={aprilLogo} 
+            alt="April Store" 
+            width="110" 
+            height="110" 
+            style={{ 
+              borderRadius: '50%', 
+              boxShadow: '0 8px 24px -4px rgba(159, 18, 57, 0.25)',
+              border: '2px solid var(--rose-pale)'
+            }} 
+          />
         </div>
       </div>
 
