@@ -43,34 +43,44 @@ export default function Pagos() {
   const handleDownloadPDF = async (pago) => {
     setSelectedPago(pago);
     
-    // Dar un momento para que React renderice el comprobante oculto con los datos del pago
+    // Dar un momento para que React renderice el comprobante
     setTimeout(async () => {
       const element = printRef.current;
       if (!element) return;
 
-      const canvas = await html2canvas(element, {
-        scale: 2, // Aumentar resolución
-        backgroundColor: '#ffffff'
-      });
-      const imgData = canvas.toDataURL('image/png');
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 3, // Muy alta resolución
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+        
+        // Pesar menos con JPEG
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-      // Crear PDF con dimensiones de celular (aprox 9:16)
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [380, 650]
-      });
+        // Crear PDF ajustado exactamente al tamaño del comprobante
+        const canvasWidth = canvas.width / 3;
+        const canvasHeight = canvas.height / 3;
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvasWidth + 40, canvasHeight + 40] // +40px de padding visual en el PDF
+        });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      
-      const fileName = `Recibo_AprilStore_${pago.colaborador_id?.nombre.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyy')}.pdf`;
-      pdf.save(fileName);
-      
-      setSelectedPago(null); // Limpiar seleccion despues de generar
-    }, 100);
+        // Centrar imagen en el PDF
+        pdf.addImage(imgData, 'JPEG', 20, 20, canvasWidth, canvasHeight);
+        
+        const fileName = `Comprobante_AprilStore_${pago.colaborador_id?.nombre.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyy')}.pdf`;
+        pdf.save(fileName);
+      } catch (err) {
+        console.error("Error generando PDF: ", err);
+        alert("Hubo un problema al generar el recibo.");
+      } finally {
+        setSelectedPago(null); 
+      }
+    }, 500); // 500ms asegura que las fuentes e iconos SVG carguen bien
   };
 
   const filtered = pagos.filter(p => {
@@ -169,7 +179,7 @@ export default function Pagos() {
       </div>
 
       {/* Recibo Oculto para Generación de PDF */}
-      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
         {selectedPago && (
           <div ref={printRef} style={{ width: '380px', padding: '30px', background: '#ffffff', fontFamily: 'sans-serif', color: '#333' }}>
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
