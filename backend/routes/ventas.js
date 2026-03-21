@@ -252,7 +252,22 @@ router.post('/generar-reporte', auth, async (req, res) => {
 
 _Reporte automático generado el ${new Date().toLocaleString('es-MX')}_`;
 
-    res.json({ success: true, message: 'Reporte generado', whatsappText });
+    res.json({ 
+      success: true, 
+      message: 'Reporte generado', 
+      whatsappText,
+      data: {
+        etiquetaPeriodo,
+        totalVentas,
+        totalTransacciones: ventas.length,
+        desglose: {
+          efectivo: totalEfectivo,
+          tarjeta: totalTarjeta,
+          transferencia: totalTransferencia
+        },
+        fechaGeneracion: new Date().toISOString()
+      }
+    });
   } catch (error) {
     console.error('Error generando reporte de ventas', error);
     res.status(500).json({ success: false, message: 'Error interno al generar reporte' });

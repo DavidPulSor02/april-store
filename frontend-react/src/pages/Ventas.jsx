@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Api } from '../services/api';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export default function Ventas() {
   const [ventas, setVentas] = useState([]);
@@ -19,6 +22,8 @@ export default function Ventas() {
   const [reportQuincena, setReportQuincena] = useState(1);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportWhatsappText, setReportWhatsappText] = useState('');
+  const [reportData, setReportData] = useState(null);
+  const printRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -58,6 +63,7 @@ export default function Ventas() {
       });
       if (res.success && res.whatsappText) {
         setReportWhatsappText(res.whatsappText);
+        setReportData(res.data);
       } else {
         alert(res.message || 'Error al generar reporte');
       }
@@ -83,6 +89,25 @@ export default function Ventas() {
   const EstatusBadge = ({ e }) => {
     const map = { completada: 'badge-success', cancelada: 'badge-danger', pendiente: 'badge-warning' };
     return <span className={`badge ${map[e] || 'badge-neutral'}`}>{e || 'completada'}</span>;
+  };
+
+  const handleDownloadPDF = async () => {
+    setTimeout(async () => {
+      const element = printRef.current;
+      if (!element) return;
+      try {
+        const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const canvasWidth = canvas.width / 3;
+        const canvasHeight = canvas.height / 3;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [canvasWidth + 40, canvasHeight + 40] });
+        pdf.addImage(imgData, 'JPEG', 20, 20, canvasWidth, canvasHeight);
+        pdf.save(`Reporte_Ventas_AprilStore_${format(new Date(), 'ddMMyy')}.pdf`);
+      } catch (err) {
+        console.error("Error generando PDF: ", err);
+        alert("Hubo un problema al generar el PDF.");
+      }
+    }, 500);
   };
 
   return (
@@ -232,13 +257,15 @@ export default function Ventas() {
               {reportWhatsappText ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <p style={{ textAlign: 'center', marginBottom: '10px', fontWeight: 500, color: 'var(--ink-dark)' }}>
-                    ¡Reporte Listo!<br/><span style={{ fontSize: '14px', fontWeight: 'normal', color: 'var(--ink-muted)' }}>Elige a quién enviarlo mágicamente:</span>
+                    ¡Reporte Listo!<br/><span style={{ fontSize: '14px', fontWeight: 'normal', color: 'var(--ink-muted)' }}>Elige cómo quieres enviarlo:</span>
                   </p>
-                  <a href={`https://wa.me/522711272780?text=${encodeURIComponent(reportWhatsappText)}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ textAlign: 'center', textDecoration: 'none', background: '#25D366', color: '#fff', border: 'none', display: 'block', padding: '12px', fontSize: '15px' }}>
-                    📲 WhatsApp a 2711272780
-                  </a>
-                  <a href={`https://wa.me/522711077208?text=${encodeURIComponent(reportWhatsappText)}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ textAlign: 'center', textDecoration: 'none', background: '#25D366', color: '#fff', border: 'none', display: 'block', padding: '12px', fontSize: '15px' }}>
-                    📲 WhatsApp a 2711077208
+                  
+                  <button onClick={handleDownloadPDF} className="btn-primary" style={{ textAlign: 'center', background: '#e11d48', color: '#fff', border: 'none', padding: '12px', fontSize: '15px' }}>
+                    <Download size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }}/> Descargar como PDF Elegante
+                  </button>
+
+                  <a href={`https://wa.me/?text=${encodeURIComponent(reportWhatsappText)}`} target="_blank" rel="noreferrer" className="btn-primary" style={{ textAlign: 'center', textDecoration: 'none', background: '#25D366', color: '#fff', border: 'none', display: 'block', padding: '12px', fontSize: '15px' }}>
+                    📲 Enviar Texto por WhatsApp
                   </a>
                 </div>
               ) : (
@@ -272,13 +299,68 @@ export default function Ventas() {
               </button>
               {!reportWhatsappText && (
                 <button className="btn-primary" onClick={handleSendReport} disabled={sendingReport}>
-                  {sendingReport ? 'Generando...' : '📊 Generar Reporte Whatsapp'}
+                  {sendingReport ? 'Generando...' : '📊 Generar Reporte'}
                 </button>
               )}
             </div>
           </div>
         </div>
       )}
+
+      {/* Recibo Oculto para Generación de PDF */}
+      <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
+        {reportData && (
+          <div ref={printRef} style={{ width: '380px', padding: '30px', background: '#ffffff', fontFamily: 'sans-serif', color: '#333' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ marginBottom: '10px' }}>
+                 <svg width="40" height="40" viewBox="0 0 28 28" fill="none" style={{ margin: '0 auto' }}>
+                    <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="#E11D48"/>
+                    <path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5-5-2.239 5-5 5-5-2.239-5-5z" fill="white"/>
+                  </svg>
+              </div>
+              <h2 style={{ margin: '0 0 4px', fontSize: '20px', color: '#111' }}>April Store</h2>
+              <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Resumen Contable de Ventas</p>
+            </div>
+
+            <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
+              <span style={{ fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Período Reportado</span>
+              <div style={{ fontWeight: 600, fontSize: '15px', color: '#111', marginTop: '4px' }}>{reportData.etiquetaPeriodo}</div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Ingresos Brutos en Sistema</p>
+              <h1 style={{ margin: 0, fontSize: '38px', color: '#E11D48' }}>${reportData.totalVentas?.toFixed(2)}</h1>
+              <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#10b981', fontWeight: 600 }}>{reportData.totalTransacciones} Transacciones procesadas</p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '14px', color: '#111', borderBottom: '1px solid #eee', paddingBottom: '8px', margin: '0 0 12px 0' }}>Desglose por Flujo</h3>
+              <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '6px 0', color: '#666' }}>💵 Efectivo en Caja:</td>
+                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${reportData.desglose.efectivo?.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 0', color: '#666' }}>💳 Pagos en Terminal:</td>
+                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${reportData.desglose.tarjeta?.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 0', color: '#666' }}>🏦 Transferencias SPEI:</td>
+                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${reportData.desglose.transferencia?.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '11px', color: '#999' }}>
+               <p style={{ margin: '0 0 4px' }}>Emitido el {format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+               <p style={{ margin: 0 }}>Documento Financiero Interno</p>
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
