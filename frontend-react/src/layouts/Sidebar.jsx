@@ -25,9 +25,11 @@ export default function Sidebar({ user }) {
           <img 
             src={aprilLogo} 
             alt="April Store" 
-            width="110" 
-            height="110" 
             style={{ 
+              width: '110px',
+              height: '110px',
+              objectFit: 'cover',
+              objectPosition: 'center',
               borderRadius: '50%', 
               boxShadow: '0 8px 24px -4px rgba(159, 18, 57, 0.25)',
               border: '2px solid var(--rose-pale)'

@@ -38,7 +38,16 @@ export default function Login() {
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo">
-          <img src={aprilLogo} alt="April Store" width="40" height="40" style={{ borderRadius: '50%' }} />
+          <img 
+            src={aprilLogo} 
+            alt="April Store" 
+            style={{ 
+              width: '40px', 
+              height: '40px', 
+              objectFit: 'cover', 
+              borderRadius: '50%' 
+            }} 
+          />
           <span className="login-brand" style={{ fontSize: '26px' }}>April Store</span>
         </div>
         <h1 className="login-title">Bienvenida de vuelta</h1>
