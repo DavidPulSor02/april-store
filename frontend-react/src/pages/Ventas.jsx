@@ -210,29 +210,60 @@ export default function Ventas() {
                 </div>
               </div>
 
-              <h4 style={{ fontSize: '14px', marginBottom: '12px', fontWeight: 600 }}>Artículos Vendidos</h4>
+              <h4 style={{ fontSize: '14px', marginBottom: '12px', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                Artículos Vendidos
+                <span style={{ fontSize: '12px', color: 'var(--ink-muted)', fontWeight: 400 }}>Transparencia Contable</span>
+              </h4>
               <div style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead style={{ background: 'var(--surface-2)' }}>
                     <tr>
-                      <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500, color: 'var(--ink-muted)' }}>Producto</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 500, color: 'var(--ink-muted)' }}>Cantidad</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 500, color: 'var(--ink-muted)' }}>Precio U.</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--ink-dark)' }}>Producto</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--ink-muted)' }}>Precio</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--ink-muted)' }}>Pago Colab.</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--success)' }}>Utilidad Neta</th>
                     </tr>
                   </thead>
                   <tbody>
                     {ventaActual.items && ventaActual.items.length > 0 ? (
                       ventaActual.items.map((it, idx) => (
                         <tr key={idx} style={{ borderTop: '1px solid var(--border)' }}>
-                          <td style={{ padding: '8px 12px' }}>{it.producto_id?.nombre || 'Producto eliminado'}</td>
-                          <td style={{ padding: '8px 12px', textAlign: 'right' }}>{it.cantidad}</td>
-                          <td style={{ padding: '8px 12px', textAlign: 'right' }}>${it.precio_unitario?.toFixed(2) || '0.00'}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ fontWeight: 500 }}>{it.producto_id?.nombre || 'Producto eliminado'}</div>
+                            {it.colaborador_id ? (
+                              <div style={{ fontSize: '11px', color: 'var(--ink-muted)' }}>👤 {it.colaborador_id.nombre} ({it.porcentaje_comision}%)</div>
+                            ) : (
+                              <div style={{ fontSize: '11px', color: 'var(--ink-muted)' }}>🏢 Propiedad Tienda (100%)</div>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--ink-mid)' }}>
+                            {it.cantidad}x ${it.precio_unitario}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--ink-mid)' }}>
+                            ${it.comision_colaborador?.toFixed(2) || '0.00'}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--success-dark)', fontWeight: 600 }}>
+                            ${it.comision_tienda?.toFixed(2) || '0.00'}
+                          </td>
                         </tr>
                       ))
                     ) : (
-                       <tr><td colSpan="3" style={{ padding: '16px', textAlign: 'center', color: 'var(--ink-muted)' }}>Sin detalles de artículos</td></tr>
+                       <tr><td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'var(--ink-muted)' }}>Sin detalles de artículos</td></tr>
                     )}
                   </tbody>
+                  {ventaActual.items && ventaActual.items.length > 0 && (
+                    <tfoot style={{ background: 'var(--surface-1)', borderTop: '2px dotted var(--border)' }}>
+                      <tr>
+                        <td colSpan="2" style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: 'var(--ink-muted)' }}>Gran Total Ingresos:</td>
+                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: 'var(--ink-dark)' }}>
+                          ${ventaActual.items.reduce((sum, i) => sum + (i.comision_colaborador || 0), 0).toFixed(2)}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: 'var(--success-dark)' }}>
+                          ${ventaActual.items.reduce((sum, i) => sum + (i.comision_tienda || 0), 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
             </div>
