@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Api } from '../services/api';
-import { Search, DollarSign, CheckCircle } from 'lucide-react';
+import { Search, DollarSign, CheckCircle, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export default function Pagos() {
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstatus, setFilterEstatus] = useState('');
+  const [selectedPago, setSelectedPago] = useState(null);
+  const printRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -33,6 +38,39 @@ export default function Pagos() {
     } catch (error) {
       alert(error.message || 'Error al liquidar pago');
     }
+  };
+
+  const handleDownloadPDF = async (pago) => {
+    setSelectedPago(pago);
+    
+    // Dar un momento para que React renderice el comprobante oculto con los datos del pago
+    setTimeout(async () => {
+      const element = printRef.current;
+      if (!element) return;
+
+      const canvas = await html2canvas(element, {
+        scale: 2, // Aumentar resolución
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/png');
+
+      // Crear PDF con dimensiones de celular (aprox 9:16)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [380, 650]
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      const fileName = `Recibo_AprilStore_${pago.colaborador_id?.nombre.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyy')}.pdf`;
+      pdf.save(fileName);
+      
+      setSelectedPago(null); // Limpiar seleccion despues de generar
+    }, 100);
   };
 
   const filtered = pagos.filter(p => {
@@ -114,7 +152,12 @@ export default function Pagos() {
                           <CheckCircle size={14} style={{ marginRight: '4px' }}/> Liquidar
                         </button>
                       ) : (
-                        <span style={{ color: 'var(--success)', fontSize: '12px', fontWeight: 600 }}>Completado</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ color: 'var(--success)', fontSize: '12px', fontWeight: 600 }}>Completado</span>
+                          <button className="btn-ghost" style={{ fontSize: '11px', padding: '4px 8px', color: 'var(--ink)' }} onClick={() => handleDownloadPDF(p)}>
+                            <Download size={12} style={{ marginRight: '4px' }} /> PDF
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -124,6 +167,68 @@ export default function Pagos() {
           </table>
         </div>
       </div>
+
+      {/* Recibo Oculto para Generación de PDF */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        {selectedPago && (
+          <div ref={printRef} style={{ width: '380px', padding: '30px', background: '#ffffff', fontFamily: 'sans-serif', color: '#333' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ marginBottom: '10px' }}>
+                 <svg width="40" height="40" viewBox="0 0 28 28" fill="none" style={{ margin: '0 auto' }}>
+                    <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="#E11D48"/>
+                    <path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5-5-2.239 5-5 5-5-2.239-5-5z" fill="white"/>
+                  </svg>
+              </div>
+              <h2 style={{ margin: '0 0 4px', fontSize: '20px', color: '#111' }}>April Store</h2>
+              <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Comprobante de Pago a Colaboradora</p>
+            </div>
+
+            <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px', marginBottom: '20px' }}>
+              <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '4px 0', color: '#666' }}>Fecha de Emisión:</td>
+                    <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 500 }}>{format(new Date(), 'dd/MM/yyyy HH:mm')}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '4px 0', color: '#666' }}>Estado:</td>
+                    <td style={{ padding: '4px 0', textAlign: 'right', color: '#10b981', fontWeight: 600 }}>LIQUIDADO</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '14px', color: '#111', borderBottom: '1px solid #eee', paddingBottom: '8px', margin: '0 0 12px 0' }}>Detalles del Pago</h3>
+              <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '6px 0', color: '#666' }}>Colaboradora:</td>
+                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>{selectedPago.colaborador_id?.nombre}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 0', color: '#666' }}>Periodo de Venta:</td>
+                    <td style={{ padding: '6px 0', textAlign: 'right', fontSize: '13px' }}>
+                      {selectedPago.periodo_inicio ? format(new Date(selectedPago.periodo_inicio), 'dd/MM/yy') : '-'} al {selectedPago.periodo_fin ? format(new Date(selectedPago.periodo_fin), 'dd/MM/yy') : '-'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '30px', paddingTop: '20px', borderTop: '2px dashed #eee' }}>
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Monto Total Transferido</p>
+              <h1 style={{ margin: 0, fontSize: '32px', color: '#E11D48' }}>${selectedPago.monto?.toFixed(2)}</h1>
+            </div>
+
+            <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '11px', color: '#999' }}>
+               <p style={{ margin: '0 0 4px' }}>Este documento es un comprobante de liquidación interna.</p>
+               <p style={{ margin: 0 }}>¡Gracias por colaborar con April Store!</p>
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
