@@ -61,11 +61,11 @@ export default function Ventas() {
         mesAnno: reportMesAnno,
         numQuincena: reportQuincena
       });
-      if (res.success && res.whatsappText) {
+      if (res && res.whatsappText) {
         setReportWhatsappText(res.whatsappText);
-        setReportData(res.data);
+        setReportData(res);
       } else {
-        alert(res.message || 'Error al generar reporte');
+        alert('Respuesta inválida o sin datos al generar reporte');
       }
     } catch (e) {
       alert(e.message || 'Error de conexión');

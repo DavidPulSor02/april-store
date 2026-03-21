@@ -254,9 +254,8 @@ _Reporte automático generado el ${new Date().toLocaleString('es-MX')}_`;
 
     res.json({ 
       success: true, 
-      message: 'Reporte generado', 
-      whatsappText,
       data: {
+        whatsappText,
         etiquetaPeriodo,
         totalVentas,
         totalTransacciones: ventas.length,
