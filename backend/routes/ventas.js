@@ -53,15 +53,24 @@ router.post('/', auth, async (req, res) => {
       const itemSubtotal = +(producto.precio_venta * item.cantidad).toFixed(2);
       subtotal += itemSubtotal;
 
+      let porc_comision = 0; // Para productos de la tienda la comisión del colaborador es 0%
+      if (producto.colaborador_id) {
+        const colab = await mongoose.model('Colaborador').findById(producto.colaborador_id).session(session);
+        porc_comision = colab?.porcentaje_comision !== undefined ? colab.porcentaje_comision : 70;
+      }
+
+      const comision_c = +(itemSubtotal * porc_comision / 100).toFixed(2);
+      const comision_t = +(itemSubtotal - comision_c).toFixed(2);
+
       itemsData.push({
         producto_id:         producto._id,
         colaborador_id:      producto.colaborador_id,
         cantidad:            item.cantidad,
         precio_unitario:     producto.precio_venta,
         subtotal:            itemSubtotal,
-        porcentaje_comision: item.porcentaje_comision ?? 70,
-        comision_colaborador: +(itemSubtotal * (item.porcentaje_comision ?? 70) / 100).toFixed(2),
-        comision_tienda:      +(itemSubtotal * (1 - (item.porcentaje_comision ?? 70) / 100)).toFixed(2),
+        porcentaje_comision: porc_comision,
+        comision_colaborador: comision_c,
+        comision_tienda:      comision_t,
       });
 
       // Descontar stock general del producto
