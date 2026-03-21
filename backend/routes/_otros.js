@@ -34,15 +34,50 @@ const pRouter = require('express').Router();
 const { PagoColaborador, MovimientoContable } = require('../models');
 
 pRouter.get('/', auth, async (req, res) => {
-  const { colaborador_id, estatus } = req.query;
-  const filter = {};
-  if (colaborador_id) filter.colaborador_id = colaborador_id;
-  if (estatus)        filter.estatus        = estatus;
-  const data = await PagoColaborador.find(filter)
+  const { filterEstatus } = req.query; // Puede ser que reciba filterEstatus o estatus
+
+  // Función para obtener deuda pendiente de todos los colaboradores
+  const { Colaborador, VentaItem, PagoColaborador } = require('../models');
+  
+  const colaboradores = await Colaborador.find({ estatus: 'activo' });
+  const pagosReales = await PagoColaborador.find()
     .populate('colaborador_id', 'nombre')
     .populate('usuario_id', 'nombre')
     .sort({ creado_en: -1 });
-  res.json({ success: true, data });
+
+  const virtuales = [];
+  
+  // Calcular deuda dinámica por colaborador
+  for (let c of colaboradores) {
+    const items = await VentaItem.find({ colaborador_id: c._id }).populate({ path: 'venta_id', match: { estatus: 'completada' } });
+    const filtrados = items.filter(i => i.venta_id);
+    
+    let comisionesTotales = 0;
+    filtrados.forEach(i => comisionesTotales += i.comision_colaborador);
+    
+    let pagosPreviosTotales = 0;
+    const historialPagos = pagosReales.filter(p => p.colaborador_id?._id?.toString() === c._id.toString() && p.estatus === 'pagado');
+    historialPagos.forEach(p => pagosPreviosTotales += p.monto);
+    
+    let saldoPendiente = +(comisionesTotales - pagosPreviosTotales).toFixed(2);
+    
+    if (saldoPendiente > 0) {
+      virtuales.push({
+        _id: `v_${c._id}_${saldoPendiente}`, // Virtual ID string
+        colaborador_id: { _id: c._id, nombre: c.nombre },
+        monto: saldoPendiente,
+        estatus: 'pendiente',
+        periodo_inicio: Date.now(), // Podría ser el inicio del registro, pero se enviará así por UX
+        periodo_fin: Date.now()
+      });
+    }
+  }
+
+  // Combinar reales (pagados históricos) y virtuales (pendientes actuales)
+  const realesPagados = pagosReales.filter(p => p.estatus === 'pagado');
+  const todos = [...virtuales, ...realesPagados];
+
+  res.json({ success: true, data: todos });
 });
 
 pRouter.post('/', auth, async (req, res) => {
@@ -61,12 +96,54 @@ pRouter.post('/', auth, async (req, res) => {
   res.status(201).json({ success: true, data: pago });
 });
 
-pRouter.patch('/:id/liquidar', auth, async (req, res) => {
+pRouter.post('/:id/liquidar', auth, async (req, res) => {
+  // Soporte para Liquidar un recibo virtual "v_colabId_monto"
+  if (req.params.id.startsWith('v_')) {
+    const partes = req.params.id.split('_');
+    const colabId = partes[1];
+    const monto = parseFloat(partes[2]);
+    
+    // Generar el recibo real pagado
+    const p = await PagoColaborador.create({
+      colaborador_id: colabId,
+      usuario_id: req.usuario.id,
+      monto: monto,
+      periodo_inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Por defecto inicio de mes actual
+      periodo_fin: new Date(),
+      metodo_pago: 'efectivo',
+      estatus: 'pagado',
+      fecha_pago: new Date()
+    });
+
+    // Registrar egreso en contabilidad de la tienda
+    await MovimientoContable.create({
+      usuario_id: req.usuario.id,
+      referencia_id: p._id,
+      referencia_modelo: 'PagoColaborador',
+      tipo: 'egreso',
+      concepto: 'Liquidación a colaboradora',
+      categoria_contable: 'pago_colaborador',
+      monto: monto,
+      saldo_resultante: 0,
+      fecha: new Date(),
+    });
+
+    const populated = await PagoColaborador.findById(p._id).populate('colaborador_id', 'nombre');
+    return res.json({ success: true, data: populated });
+  }
+
+  // Comportamiento normal de liquidación y para backwards compatibility
   const p = await PagoColaborador.findByIdAndUpdate(
     req.params.id,
     { estatus: 'pagado', fecha_pago: new Date(), ...req.body },
     { new: true }
   ).populate('colaborador_id', 'nombre');
+  res.json({ success: true, data: p });
+});
+
+// Alias PATCH por precaución
+pRouter.patch('/:id/liquidar', auth, async (req, res) => {
+  const p = await PagoColaborador.findByIdAndUpdate(req.params.id, { estatus: 'pagado', fecha_pago: new Date() });
   res.json({ success: true, data: p });
 });
 
