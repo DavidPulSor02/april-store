@@ -29,6 +29,13 @@ export const printTicket = (ventaData) => {
     </tr>
   `).join('');
 
+  const storeName = localStorage.getItem('april_storeName') || 'April Store';
+  const savedMsg = localStorage.getItem('april_ticketMessage') || 'Gracias por tu compra\\nPara cambios presenta este ticket\\n¡Vuelve pronto!';
+  const footerMessageHtml = savedMsg.split('\\n').map((line, idx, arr) => {
+    if (idx === arr.length - 1) return `<strong style="color:#A84D62">${storeName}</strong> — ${line}`;
+    return line + '<br/>';
+  }).join('');
+
   const html = `
 <!DOCTYPE html>
 <html lang="es">
@@ -80,7 +87,7 @@ export const printTicket = (ventaData) => {
     <div class="logo-circle">
       <svg width="18" height="18" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="white"/><path d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5-2.239 5-5 5-5-2.239-5-5z" fill="#C8637A"/></svg>
     </div>
-    <div class="brand">April Store</div>
+    <div class="brand">${storeName}</div>
     <div class="tagline">accesorios únicos con amor</div>
     <div class="folio">Folio: <strong>${folio || 'PENDIENTE'}</strong></div>
     <div class="fecha">${formatDate(fecha || new Date())}</div>
@@ -110,12 +117,10 @@ export const printTicket = (ventaData) => {
   </div>
 
   <div class="footer">
-    Gracias por tu compra<br/>
-    Para cambios presenta este ticket<br/>
-    <strong style="color:#A84D62">April Store</strong> — ¡Vuelve pronto!
+    ${footerMessageHtml}
   </div>
 </body>
-</html>`;
+</html>`;html>`;
 
   const win = window.open('', '_blank', 'width=420,height=700');
   if (!win) {
