@@ -32,7 +32,7 @@ export default function Configuracion() {
     try {
       setLoading(true);
       const res = await Api.get('/productos');
-      const productos = res.data?.data || [];
+      const productos = Array.isArray(res) ? res : res.data || [];
       const productosConSku = productos.filter(p => p.sku && p.estatus !== 'inactivo');
 
       if (!productosConSku.length) {
