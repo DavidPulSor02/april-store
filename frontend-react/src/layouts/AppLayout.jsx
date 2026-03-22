@@ -3,10 +3,12 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import CajeraLayout from './CajeraLayout';
 import { useAuth } from '../context/AuthContext';
+import { useState } from 'react';
 
 export default function AppLayout() {
   const { user } = useAuth();
   const location = useLocation();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   if (!user) return null;
 
@@ -22,8 +24,8 @@ export default function AppLayout() {
 
   // Layout normal de Administrador con Sidebars
   return (
-    <div className="app">
-      <Sidebar user={user} />
+    <div className={`app ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar user={user} isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
       
       <main className="main-content">
         <Topbar user={user} />
