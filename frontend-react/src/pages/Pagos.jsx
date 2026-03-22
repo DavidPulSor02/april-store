@@ -30,10 +30,10 @@ export default function Pagos() {
     }
   };
 
-  const liquidarPago = async (id) => {
-    if (!window.confirm('¿Confirmas que este pago ha sido transferido o entregado en efectivo?')) return;
+  const liquidarPago = async (pagoId) => {
+    if (!(await window.appConfirm('¿Confirmas que este pago ha sido transferido o entregado en efectivo?'))) return;
     try {
-      await Api.post(`/pagos/${id}/liquidar`);
+      await Api.post(`/pagos/${pagoId}/liquidar`);
       fetchData();
     } catch (error) {
       alert(error.message || 'Error al liquidar pago');

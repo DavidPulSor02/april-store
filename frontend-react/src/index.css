@@ -899,6 +899,31 @@ body {
   cursor: pointer;
   transition: all var(--transition);
 }
+
+/* ── SWEETALERT2 OVERRIDES ──────────────────────────────── */
+.swal-custom-popup {
+  border-radius: var(--radius-xl) !important;
+  border: 1px solid var(--rose-mist) !important;
+  box-shadow: var(--shadow-xl) !important;
+  padding: 16px 24px 24px !important;
+  font-family: var(--font-ui) !important;
+}
+.swal-custom-popup .page-title {
+  font-size: 22px !important;
+  margin-top: 10px !important;
+}
+.swal-custom-popup .swal2-html-container {
+  color: var(--ink-mid) !important;
+  font-size: 14.5px !important;
+  margin-bottom: 24px !important;
+}
+.swal-custom-popup .btn-primary {
+  padding: 12px 32px !important;
+  font-size: 15px !important;
+  border-radius: var(--radius-md) !important;
+  margin: 0 !important;
+  min-width: 120px !important;
+}
 .icon-btn:hover { background: var(--rose-pale); color: var(--rose-deep); }
 
 .link-btn {

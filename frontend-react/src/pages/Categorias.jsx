@@ -43,7 +43,7 @@ export default function Categorias() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿ELIMINAR ESTA CATEGORÍA? Se borrarán todos los productos asociados.')) return;
+    if (!(await window.appConfirm('¿ELIMINAR ESTA CATEGORÍA? Se borrarán todos los productos asociados.'))) return;
     try {
       await Api.delete(`/categorias/${id}`);
       fetchData();

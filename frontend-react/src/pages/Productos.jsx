@@ -131,7 +131,7 @@ export default function Productos() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Eliminar este producto?')) return;
+    if (!(await window.appConfirm('¿Eliminar este producto?'))) return;
     try {
       await Api.delete(`/productos/${id}`);
       fetchProductos();

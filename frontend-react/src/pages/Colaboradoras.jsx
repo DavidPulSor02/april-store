@@ -44,7 +44,7 @@ export default function Colaboradoras() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Eliminar esta colaboradora?')) return;
+    if (!(await window.appConfirm('¿Eliminar esta colaboradora?'))) return;
     try {
       await Api.delete(`/colaboradores/${id}`);
       fetchData();
