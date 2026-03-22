@@ -25,8 +25,17 @@ export default function POS() {
   const [efectivoRecibido, setEfectivoRecibido] = useState('');
   const [referenciaPago, setReferenciaPago] = useState('');
 
+  const [taxRate, setTaxRate] = useState(0);
+  const [customPayments, setCustomPayments] = useState([]);
+
   useEffect(() => {
     fetchData();
+    const savedTax = localStorage.getItem('april_taxRate');
+    if (savedTax) setTaxRate(Number(savedTax));
+    const savedPayments = localStorage.getItem('april_customPayments');
+    if (savedPayments) {
+      try { setCustomPayments(JSON.parse(savedPayments)); } catch(e){}
+    }
   }, []);
 
   const fetchData = async () => {
@@ -96,7 +105,9 @@ export default function POS() {
   const clearCart = () => setCart([]);
 
   const subtotal = cart.reduce((sum, item) => sum + (item.precio_venta * item.qty), 0);
-  const total = Math.max(0, subtotal - (parseFloat(descuento) || 0));
+  const descNum = parseFloat(descuento) || 0;
+  const impuestoCalc = (subtotal - descNum) * (taxRate / 100);
+  const total = Math.max(0, subtotal - descNum + impuestoCalc);
 
   const handleCobrar = async (e) => {
     if (e) e.preventDefault();
@@ -112,14 +123,15 @@ export default function POS() {
       const payload = {
         items: cart.map(item => ({ producto_id: item._id, cantidad: item.qty })),
         metodo_pago: metodoPago,
-        descuento: parseFloat(descuento) || 0,
+        descuento: descNum,
+        impuesto: impuestoCalc,
         notas: referenciaPago ? `Ref: ${referenciaPago}` : ''
       };
       
       const res = await Api.post('/ventas', payload);
       
       // Armar la estructura falsa para el ticket si el backend no lo devuelve entero mapeado
-      const ventaData = res.venta || res || { folio: 'VTA-RECIENTE', fecha: new Date(), metodo_pago: metodoPago, total, descuento: parseFloat(descuento)||0, items: cart.map(i => ({ producto_id: i, cantidad: i.qty, precio_unitario: i.precio_venta })) };
+      const ventaData = res.venta || res || { folio: 'VTA-RECIENTE', fecha: new Date(), metodo_pago: metodoPago, total, descuento: descNum, impuesto: impuestoCalc, items: cart.map(i => ({ producto_id: i, cantidad: i.qty, precio_unitario: i.precio_venta })) };
       
       // Si el response directo trae el _id, se lo pasamos para que el modal de envío de mail funcione
       if (res && res._id && !ventaData._id) ventaData._id = res._id;
@@ -146,10 +158,10 @@ export default function POS() {
   });
 
   return (
-    <div className="pos-container fade-in" style={{ height: 'calc(100vh - 120px)', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: '24px', overflow: 'hidden' }}>
+    <div className="pos-container fade-in">
       
       {/* LEFT PANEL */}
-      <div className="pos-panel-left" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="pos-panel-left">
         <div style={{ padding: '16px', background: 'var(--surface-1)', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '16px', display: 'flex', gap: '16px' }}>
           <div className="search-wrap flex-1">
             <Search className="search-icon" size={16} />
@@ -208,7 +220,7 @@ export default function POS() {
       </div>
 
       {/* RIGHT PANEL - CART */}
-      <div className="pos-panel-right panel" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="pos-panel-right panel">
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><ShoppingCart size={18}/> Venta Actual</h3>
           <button className="btn-ghost" style={{ padding: '4px 8px', fontSize: '12px', color: 'var(--danger)' }} onClick={clearCart} disabled={cart.length === 0}>Vaciar</button>
@@ -254,16 +266,23 @@ export default function POS() {
               <input type="number" min="0" step="1" value={descuento} onChange={e => setDescuento(e.target.value)} style={{ padding: '4px', textAlign: 'right' }} />
             </div>
           </div>
+          {taxRate > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: 'var(--ink-mid)' }}>
+              <span>Impuesto ({taxRate}%)</span>
+              <span>${impuestoCalc.toFixed(2)}</span>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '20px', fontWeight: 700 }}>
             <span>Total</span>
             <span style={{ color: 'var(--rose-deep)' }}>${total.toFixed(2)}</span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '8px', marginBottom: '16px' }}>
             {[
               { id: 'efectivo', label: 'Efectivo', icon: Banknote },
               { id: 'tarjeta', label: 'Tarjeta', icon: CreditCard },
-              { id: 'transferencia', label: 'Transfer.', icon: ArrowRightLeft }
+              { id: 'transferencia', label: 'Transfer.', icon: ArrowRightLeft },
+              ...customPayments.map(p => ({ id: p, label: p.charAt(0).toUpperCase() + p.slice(1).substring(0,8), icon: CreditCard }))
             ].map(m => (
               <button 
                 key={m.id}
@@ -344,6 +363,7 @@ export default function POS() {
                   <div className="form-field full-span">
                     <div style={{ padding: '16px', background: 'var(--surface-2)', borderRadius: '8px', marginBottom: '16px', fontSize: '12px' }}>
                       <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Datos para Transferencia:</p>
+                      {/* EDITAR: Actualiza estos datos con los tuyos en producción */}
                       <p style={{ margin: 0 }}>CLABE: <strong>012 345 6789 0123 4567</strong></p>
                       <p style={{ margin: '4px 0 0 0' }}>Banco: <strong>STP / BBVA</strong></p>
                     </div>
@@ -361,13 +381,30 @@ export default function POS() {
                 {metodoPago === 'tarjeta' && (
                   <div className="form-field full-span">
                      <div style={{ padding: '16px', background: 'var(--surface-2)', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', textAlign: 'center' }}>
-                      <p style={{ margin: '0 0 8px 0', color: 'var(--ink-mid)' }}>Terminal de Cobro (Stripe / Clip)</p>
-                      <p style={{ margin: 0, fontWeight: 500 }}>Realiza el cobro de ${total.toFixed(2)} en tu terminal física y anota el número de aprobación abajo.</p>
+                      <p style={{ margin: '0 0 8px 0', color: 'var(--ink-mid)' }}>Terminal Clip / Bancaria</p>
+                      <p style={{ margin: 0, fontWeight: 500 }}>Realiza el cobro de ${total.toFixed(2)} en tu terminal física Clip y anota el número de aprobación abajo.</p>
                     </div>
                     <label>Número de Aprobación Tarjeta</label>
                     <input 
                       type="text" 
                       placeholder="Ej. APROB 03214" 
+                      value={referenciaPago}
+                      onChange={e => setReferenciaPago(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                {!['efectivo', 'transferencia', 'tarjeta'].includes(metodoPago) && (
+                  <div className="form-field full-span">
+                     <div style={{ padding: '16px', background: 'var(--surface-2)', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', textAlign: 'center' }}>
+                      <p style={{ margin: '0 0 8px 0', color: 'var(--ink-mid)' }}>Pago con {metodoPago.charAt(0).toUpperCase() + metodoPago.slice(1)}</p>
+                      <p style={{ margin: 0, fontWeight: 500 }}>Realiza el cobro de ${total.toFixed(2)} vía {metodoPago} y anota la referencia abajo.</p>
+                    </div>
+                    <label>Referencia / Folio</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. REF 12345" 
                       value={referenciaPago}
                       onChange={e => setReferenciaPago(e.target.value)}
                       required

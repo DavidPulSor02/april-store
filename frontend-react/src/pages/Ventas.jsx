@@ -81,9 +81,11 @@ export default function Ventas() {
     return matchSearch && matchMetodo;
   });
 
+  const metodosUnicos = [...new Set(ventas.map(v => v.metodo_pago))].filter(Boolean);
+
   const MetodoBadge = ({ m }) => {
     const map = { efectivo: 'badge-success', transferencia: 'badge-info', tarjeta: 'badge-rose', mixto: 'badge-warning' };
-    return <span className={`badge ${map[m] || 'badge-neutral'}`}>{m}</span>;
+    return <span className={`badge ${map[m] || 'badge-neutral'}`} style={{ textTransform: 'capitalize' }}>{m}</span>;
   };
 
   const EstatusBadge = ({ e }) => {
@@ -126,9 +128,9 @@ export default function Ventas() {
           </div>
           <select className="select-sm" value={filterMetodo} onChange={e => setFilterMetodo(e.target.value)}>
             <option value="">Todos los métodos</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="tarjeta">Tarjeta</option>
-            <option value="transferencia">Transferencia</option>
+            {metodosUnicos.map(m => (
+              <option key={m} value={m} style={{ textTransform: 'capitalize' }}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+            ))}
           </select>
           <span className="count-label">{filtered.length} ventas</span>
         </div>
@@ -368,18 +370,12 @@ export default function Ventas() {
               <h3 style={{ fontSize: '14px', color: '#111', borderBottom: '1px solid #eee', paddingBottom: '8px', margin: '0 0 12px 0' }}>Desglose por Flujo</h3>
               <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
                 <tbody>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: '#666' }}>💵 Efectivo en Caja:</td>
-                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${reportData.desglose.efectivo?.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: '#666' }}>💳 Pagos en Terminal:</td>
-                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${reportData.desglose.tarjeta?.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: '#666' }}>🏦 Transferencias SPEI:</td>
-                    <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${reportData.desglose.transferencia?.toFixed(2)}</td>
-                  </tr>
+                  {Object.entries(reportData.desglose).map(([metodo, monto]) => (
+                    <tr key={metodo}>
+                      <td style={{ padding: '6px 0', color: '#666', textTransform: 'capitalize' }}>💳 {metodo}:</td>
+                      <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>${monto?.toFixed(2)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

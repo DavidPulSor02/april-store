@@ -29,6 +29,7 @@ export const printTicket = (ventaData) => {
     </tr>
   `).join('');
 
+  const impuesto = ventaData.impuesto || 0;
   const storeName = localStorage.getItem('april_storeName') || 'April Store';
   const savedMsg = localStorage.getItem('april_ticketMessage') || 'Gracias por tu compra\\nPara cambios presenta este ticket\\n¡Vuelve pronto!';
   const footerMessageHtml = savedMsg.split('\\n').map((line, idx, arr) => {
@@ -106,9 +107,12 @@ export const printTicket = (ventaData) => {
   </table>
 
   <div class="totales">
+    ${(descuento > 0 || impuesto > 0) ? `
+    <div class="totales-row"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>` : ''}
     ${descuento > 0 ? `
-    <div class="totales-row"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
     <div class="totales-row" style="color:#4A8C6A"><span>Descuento</span><span>−${formatCurrency(descuento)}</span></div>` : ''}
+    ${impuesto > 0 ? `
+    <div class="totales-row"><span>Impuestos</span><span>${formatCurrency(impuesto)}</span></div>` : ''}
     <div class="total-row">
       <span class="total-label">Total</span>
       <span class="total-val">${formatCurrency(total)}</span>

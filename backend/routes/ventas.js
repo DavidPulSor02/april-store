@@ -39,7 +39,7 @@ router.post('/', auth, async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { items, metodo_pago, descuento = 0, notas } = req.body;
+    const { items, metodo_pago, descuento = 0, notas, impuesto = 0 } = req.body;
     if (!items?.length) throw { status: 400, message: 'Se requiere al menos un artículo' };
 
     let subtotal = 0;
@@ -106,12 +106,13 @@ router.post('/', auth, async (req, res) => {
       }
     }
 
-    const total = +(subtotal - descuento).toFixed(2);
+    const total = +(subtotal - descuento + impuesto).toFixed(2);
 
     const [venta] = await Venta.create([{
       usuario_id: req.usuario.id,
       subtotal,
       descuento,
+      impuesto,
       total,
       metodo_pago,
       notas,
@@ -237,15 +238,18 @@ router.post('/generar-reporte', auth, async (req, res) => {
       estatus: 'completada'
     });
 
-    let totalVentas = 0, totalEfectivo = 0, totalTarjeta = 0, totalTransferencia = 0;
+    let totalVentas = 0;
+    const desgloseMap = {};
 
     ventas.forEach(v => {
       totalVentas += v.total;
-      if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
-      else if (v.metodo_pago === 'tarjeta') totalTarjeta += v.total;
-      else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
-      else totalEfectivo += v.total; // Default (mixto) asimilado
+      const metodo = v.metodo_pago || 'otro';
+      desgloseMap[metodo] = (desgloseMap[metodo] || 0) + v.total;
     });
+
+    const desgloseText = Object.entries(desgloseMap)
+      .map(([metodo, cantidad]) => `💳 ${metodo.charAt(0).toUpperCase() + metodo.slice(1)}: $${Number(cantidad).toLocaleString('es-MX', {minimumFractionDigits: 2})}`)
+      .join('\n');
 
     const whatsappText = `📊 *Reporte de Ventas - April Store* 📊
 
@@ -255,9 +259,7 @@ router.post('/generar-reporte', auth, async (req, res) => {
 📝 *Total de transacciones:* ${ventas.length}
 
 *Desglose por método de pago:*
-💵 Efectivo: $${Number(totalEfectivo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-💳 Tarjeta: $${Number(totalTarjeta || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-🏦 Transferencia: $${Number(totalTransferencia || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+${desgloseText}
 
 _Reporte automático generado el ${new Date().toLocaleString('es-MX')}_`;
 
@@ -268,11 +270,7 @@ _Reporte automático generado el ${new Date().toLocaleString('es-MX')}_`;
         etiquetaPeriodo,
         totalVentas,
         totalTransacciones: ventas.length,
-        desglose: {
-          efectivo: totalEfectivo,
-          tarjeta: totalTarjeta,
-          transferencia: totalTransferencia
-        },
+        desglose: desgloseMap,
         fechaGeneracion: new Date().toISOString()
       }
     });

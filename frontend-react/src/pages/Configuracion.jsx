@@ -5,6 +5,10 @@ import { Api } from '../services/api';
 export default function Configuracion() {
   const [storeName, setStoreName] = useState('');
   const [ticketMessage, setTicketMessage] = useState('');
+  const [taxRate, setTaxRate] = useState(0);
+  const [customPayments, setCustomPayments] = useState([]);
+  const [newPayment, setNewPayment] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -13,14 +17,35 @@ export default function Configuracion() {
     // Load local settings
     const savedName = localStorage.getItem('april_storeName') || 'April Store';
     const savedMsg = localStorage.getItem('april_ticketMessage') || 'Gracias por tu compra\nPara cambios presenta este ticket\n¡Vuelve pronto!';
+    const savedTax = localStorage.getItem('april_taxRate');
+    const savedPayments = localStorage.getItem('april_customPayments');
+
     setStoreName(savedName);
     setTicketMessage(savedMsg);
+    if (savedTax) setTaxRate(Number(savedTax));
+    if (savedPayments) {
+      try { setCustomPayments(JSON.parse(savedPayments)); } catch(e){}
+    }
   }, []);
+
+  const addPaymentMethod = () => {
+    const val = newPayment.trim().toLowerCase();
+    if (val && !customPayments.includes(val) && !['efectivo','tarjeta','transferencia'].includes(val)) {
+      setCustomPayments([...customPayments, val]);
+      setNewPayment('');
+    }
+  };
+
+  const removePaymentMethod = (pm) => {
+    setCustomPayments(customPayments.filter(p => p !== pm));
+  };
 
   const handleSave = () => {
     setSaving(true);
     localStorage.setItem('april_storeName', storeName);
     localStorage.setItem('april_ticketMessage', ticketMessage);
+    localStorage.setItem('april_taxRate', taxRate);
+    localStorage.setItem('april_customPayments', JSON.stringify(customPayments));
     setTimeout(() => {
       setSaving(false);
       setSuccessMsg('Configuración guardada correctamente.');
@@ -187,14 +212,50 @@ export default function Configuracion() {
             </button>
           </div>
 
-          <div className="panel" style={{ padding: '24px', background: 'var(--surface-2)', borderStyle: 'dashed' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-              <AlertCircle size={20} style={{ color: 'var(--ink-muted)' }} />
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--ink-mid)' }}>Próximamente</h3>
+          <div className="panel" style={{ padding: '24px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <AlertCircle size={22} style={{ color: 'var(--rose)' }} />
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)' }}>Impuestos y Pagos</h3>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>
-              Se añadirán opciones para gestionar impuestos y métodos de pago personalizados en futuras actualizaciones.
-            </p>
+            
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--ink-mid)', marginBottom: '8px' }}>
+                Tasa de IVA / Impuesto (%)
+              </label>
+              <input 
+                type="number" 
+                min="0" step="1"
+                className="form-input" 
+                value={taxRate} 
+                onChange={e => setTaxRate(Number(e.target.value))} 
+                style={{ width: '100px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--ink-faint)' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: 'var(--ink-mid)', marginBottom: '8px' }}>
+                Métodos de Pago Personalizados
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Ej. Clip, MercadoPago, Vales"
+                  value={newPayment}
+                  onChange={e => setNewPayment(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addPaymentMethod()}
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--ink-faint)' }}
+                />
+                <button type="button" onClick={addPaymentMethod} style={{ padding: '0 16px', borderRadius: '8px', border: '1px solid var(--ink-faint)', background: 'var(--surface-2)', color: 'var(--ink-mid)', fontWeight: 600, cursor: 'pointer' }}>Añadir</button>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {customPayments.map(p => (
+                  <span key={p} style={{ background: 'var(--rose-pale)', color: 'var(--rose-deep)', padding: '4px 10px', borderRadius: '40px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                    <button type="button" onClick={() => removePaymentMethod(p)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', padding: 0, fontSize: '14px', lineHeight: 1 }}>&times;</button>
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
         </div>
