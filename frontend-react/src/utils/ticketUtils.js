@@ -120,7 +120,7 @@ export const printTicket = (ventaData) => {
     ${footerMessageHtml}
   </div>
 </body>
-</html>`;html>`;
+</html>`;
 
   const win = window.open('', '_blank', 'width=420,height=700');
   if (!win) {
